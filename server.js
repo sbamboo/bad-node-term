@@ -1,6 +1,6 @@
 import express from 'express';
 import { WebSocketServer } from 'ws';
-import { spawn } from 'child_process';
+import { spawn } from 'node-pty';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import http from 'http';
@@ -18,30 +18,6 @@ const platform = os.platform();
 
 // File system state
 let fileServerCurrDir = process.cwd();
-
-// Platform-specific shell configuration
-const getShellCommand = () => {
-  if (platform === 'win32') {
-    return {
-      command: 'cmd.exe',
-      args: [],
-      options: {
-        stdio: ['pipe', 'pipe', 'pipe'],
-        shell: false,
-        windowsHide: true,
-      },
-    };
-  } else {
-    return {
-      command: process.env.SHELL || 'bash',
-      args: [],
-      options: {
-        stdio: ['pipe', 'pipe', 'pipe'],
-        shell: false,
-      },
-    };
-  }
-};
 
 // File system helper functions
 const getFileInfo = async (filePath) => {
@@ -554,12 +530,17 @@ app.use('/assets', express.static(path.join(__dirname, 'assets')));
 wss.on('connection', (ws) => {
   console.log('New terminal connection established');
 
-  // Get platform-specific shell configuration
-  const shellConfig = getShellCommand();
-
-  // Spawn shell process using child_process
-  const shellProcess = spawn(shellConfig.command, shellConfig.args, {
-    ...shellConfig.options,
+  var shell;
+  if (platform === 'win32') {
+    shell = 'powershell.exe';
+  } else {
+    shell = process.env.SHELL || 'bash'
+  }
+  // Spawn a new shell process
+  const ptyProcess = spawn(shell, [], {
+    name: 'xterm-color',
+    cols: 80,
+    rows: 24,
     cwd: process.cwd(),
     env: {
       ...process.env,
@@ -568,34 +549,13 @@ wss.on('connection', (ws) => {
     },
   });
 
-  // Track terminal size for Windows compatibility
-  let terminalCols = 80;
-  let terminalRows = 24;
-
   // Send initial welcome message
-  const welcomeMessage = `\r\n\x1b[1;32mWelcome to Cross-Platform Web Terminal!\x1b[0m\r\n`;
+  const welcomeMessage = `\r\n\x1b[1;32mWelcome to Web Terminal!\x1b[0m\r\n`;
   ws.send(welcomeMessage + '\r\n');
 
-  // Handle stdout from shell process
-  shellProcess.stdout.on('data', (data) => {
-    ws.send(data.toString());
-  });
-
-  // Handle stderr from shell process
-  shellProcess.stderr.on('data', (data) => {
-    ws.send(data.toString());
-  });
-
-  // Handle process exit
-  shellProcess.on('exit', (code, signal) => {
-    console.log(`Shell process exited with code ${code} and signal ${signal}`);
-    ws.close();
-  });
-
-  // Handle process error
-  shellProcess.on('error', (error) => {
-    console.error('Shell process error:', error);
-    ws.send(`\r\n\x1b[1;31mTerminal Error: ${error.message}\x1b[0m\r\n`);
+  // Handle data from terminal process
+  ptyProcess.onData((data) => {
+    ws.send(data);
   });
 
   // Handle data from WebSocket (user input)
@@ -605,12 +565,7 @@ wss.on('connection', (ws) => {
       const parsed = JSON.parse(message.toString());
 
       if (parsed.type === 'resize') {
-        terminalCols = parsed.cols;
-        terminalRows = parsed.rows;
-
-        // On Windows, we can't directly resize the console, but we track the size
-        // for potential future use or display formatting
-        console.log(`Terminal resized to ${terminalCols}x${terminalRows}`);
+        ptyProcess.resize(parsed.cols, parsed.rows);
         return;
       }
 
@@ -801,35 +756,24 @@ wss.on('connection', (ws) => {
     } catch (e) {
       // Not JSON, treat as regular terminal input
       const data = message.toString();
-
-      // Write data to shell process stdin
-      if (shellProcess.stdin && !shellProcess.stdin.destroyed) {
-        shellProcess.stdin.write(data);
-      }
+      ptyProcess.write(data);
     }
   });
 
   // Handle connection close
   ws.on('close', () => {
     console.log('Terminal connection closed');
-    if (shellProcess && !shellProcess.killed) {
-      shellProcess.kill();
-    }
+    ptyProcess.kill();
   });
 
-  // Handle WebSocket error
-  ws.on('error', (error) => {
-    console.error('WebSocket error:', error);
-    if (shellProcess && !shellProcess.killed) {
-      shellProcess.kill();
-    }
+  // Handle terminal process exit
+  ptyProcess.onExit(() => {
+    ws.close();
   });
 });
 
 // Start server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Cross-Platform Web Terminal server running on http://localhost:${PORT}`);
-  console.log(`Platform: ${platform}`);
-  console.log(`Shell: ${getShellCommand().command}`);
+  console.log(`Web Terminal server running on http://localhost:${PORT}`);
 });

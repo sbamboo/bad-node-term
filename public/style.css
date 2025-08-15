@@ -4,6 +4,10 @@
     box-sizing: border-box;
 }
 
+:root {
+    --secondary-grad: linear-gradient(45deg, #00ff4083, #00cc3383, #00ff4183);
+}
+
 body {
     font-family: 'Courier New', 'Monaco', 'Menlo', monospace;
     background: #000000;
@@ -121,7 +125,7 @@ body {
     left: -2px;
     right: -2px;
     bottom: -2px;
-    background: linear-gradient(45deg, #00ff41, #00cc33, #00ff41);
+    background: var(--secondary-grad);
     border-radius: 8px;
     z-index: -1;
     animation: borderGlow 3s ease-in-out infinite alternate;
@@ -183,7 +187,7 @@ body {
     left: -2px;
     right: -2px;
     bottom: -2px;
-    background: linear-gradient(45deg, #00ff41, #00cc33, #00ff41);
+    background: var(--secondary-grad);
     border-radius: 8px;
     z-index: -1;
     animation: borderGlow 3s ease-in-out infinite alternate;
@@ -249,7 +253,7 @@ body {
     left: -2px;
     right: -2px;
     bottom: -2px;
-    background: linear-gradient(45deg, #00ff41, #00cc33, #00ff41);
+    background: var(--secondary-grad);
     border-radius: 8px;
     z-index: -1;
     animation: borderGlow 3s ease-in-out infinite alternate;
@@ -572,7 +576,7 @@ body {
     left: -2px;
     right: -2px;
     bottom: -2px;
-    background: linear-gradient(45deg, #00ff41, #00cc33, #00ff41);
+    background: var(--secondary-grad);
     border-radius: 8px;
     z-index: -1;
     animation: borderGlow 3s ease-in-out infinite alternate;
