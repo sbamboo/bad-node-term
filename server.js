@@ -558,6 +558,7 @@ const getSystemInfo = async () => {
       networkTx: networkInfo.tx,
     };
   } catch (error) {
+    //console.error('Error collecting system info:', error);
     return {
       error: 'Failed to collect system information',
     };
