@@ -20,7 +20,12 @@ class SciFiTerminal {
             sof: false
         };
 
+        this.currentLineCount = 0;
+        this.currentCharsPerLine = 0;
+
         this.currentDirectoryContents = [];
+
+        this.hexViewBytesPerLine = 16; // Default for hex view
 
         // Media file extensions
         this.mediaExtensions = {
@@ -304,7 +309,6 @@ class SciFiTerminal {
             try {
                 // Try to parse as JSON for all messages
                 const parsed = JSON.parse(event.data);
-                console.log("Received WebSocket message:", parsed);
 
                 if (parsed.type === "io") {
                     if (parsed.action === "stdout") {
@@ -424,7 +428,7 @@ class SciFiTerminal {
     setupVirtualScrolling() {
         // Monitor scroll events in text and binary content areas
         const textContent = document.getElementById("text-content");
-        const binaryContent = document.getElementById("binary-content");
+        const binaryContent = document.getElementById("binary-content-scroll-region");
 
         if (textContent) {
             textContent.addEventListener("scroll", (event) => {
@@ -450,29 +454,60 @@ class SciFiTerminal {
         const scrollHeight = element.scrollHeight;
         const clientHeight = element.clientHeight;
 
-        // Check if we"re near the bottom or top
-        const nearBottom = scrollTop + clientHeight >= scrollHeight - 100;
-        const nearTop = scrollTop <= 100;
+        // Determine the "active" page index based on scroll position
+        // This is a simplified estimation. A more precise method might involve
+        // mapping scroll position to character/byte offsets and then to page indices.
+        // For text: We assume each page contributes roughly equally to the scrollHeight.
+        // For binary: Each page also contributes to the height.
 
-        if (nearBottom && !this.currentFileInfo.eof) {
-            // Request next page
-            const lastPage = Math.max(
-                ...Array.from(this.currentFileInfo.loadedPages.keys())
-            );
-            const nextPage = lastPage + 1;
-            const byteOffset = nextPage * this.currentFileInfo.pageSize;
-            this.requestFileChunk(byteOffset, nextPage);
-        } else if (nearTop && !this.currentFileInfo.sof) {
-            // Request previous page
-            const firstPage = Math.min(
-                ...Array.from(this.currentFileInfo.loadedPages.keys())
-            );
-            const prevPage = firstPage - 1;
-            if (prevPage >= 0) {
-                const byteOffset = prevPage * this.currentFileInfo.pageSize;
-                this.requestFileChunk(byteOffset, prevPage);
-            }
+        const loadedPageNumbers = Array.from(this.currentFileInfo.loadedPages.keys()).sort((a, b) => a - b);
+        if (loadedPageNumbers.length === 0) {
+            return; // No pages loaded yet
         }
+
+        const firstLoadedPage = loadedPageNumbers[0];
+        const lastLoadedPage = loadedPageNumbers[loadedPageNumbers.length - 1];
+
+        // Calculate a rough 'page height' in pixels based on the current total scroll height
+        // and the number of loaded pages. This is a simplification.
+        // A more accurate method would require knowing the actual rendered height of each page's content.
+        const estimatedPageHeight = scrollHeight / loadedPageNumbers.length;
+
+        // Calculate current approximate page being viewed
+        let currentApproxPage = Math.floor(scrollTop / estimatedPageHeight) + firstLoadedPage;
+        // Clamp it within the loaded pages range
+        currentApproxPage = Math.max(firstLoadedPage, Math.min(lastLoadedPage, currentApproxPage));
+        // Logic for requesting next page (read-ahead)
+        // Request next page if user is on the second-to-last loaded page
+        // and it's not EOF, and the next page isn't already loaded
+        if (
+            currentApproxPage >= lastLoadedPage - 1 && // User is on the second-to-last or last loaded page
+            !this.currentFileInfo.eof && // Not at the end of the file
+            !this.currentFileInfo.loadedPages.has(lastLoadedPage + 1) // Next page not already loaded
+        ) {
+            const lastLoadedPageData = this.currentFileInfo.loadedPages.get(lastLoadedPage)
+            const nextPage = lastLoadedPage + 1;
+            const byteOffset = lastLoadedPageData.offset + lastLoadedPageData.size;
+            console.log(`Requesting next page (read-ahead): ${nextPage} (offset: ${byteOffset})`);
+            this.requestFileChunk(byteOffset, nextPage);
+        }
+        /*
+
+        // Logic for requesting previous page (read-behind, optional but good for consistency)
+        // Request previous page if user is on the second loaded page
+        // and it's not SOF, and the previous page isn't already loaded
+        if (
+            currentApproxPage <= firstLoadedPage + 1 && // User is on the second or first loaded page
+            !this.currentFileInfo.sof && // Not at the start of the file
+            !this.currentFileInfo.loadedPages.has(firstLoadedPage - 1) && // Previous page not already loaded
+            (firstLoadedPage - 1) >= 0 // Ensure page number is not negative
+        ) {
+            const prevPage = firstLoadedPage - 1;
+            const byteOffset = prevPage * this.currentFileInfo.pageSize;
+            console.log(`Requesting previous page (read-behind): ${prevPage} (offset: ${byteOffset})`);
+            this.requestFileChunk(byteOffset, prevPage);
+        }
+        */
     }
 
     updatePageSize() {
@@ -569,10 +604,7 @@ class SciFiTerminal {
     }
 
     handleFileSystemMessage(message) {
-        console.log("Handling file system message:", message.action);
-
         if (message.type === "file_system" && message.action === "contents") {
-            console.log("Received file system message with path:", message.path);
             this.populateFileExplorer(message.contents, message.path);
             // Update the path input field with current directory
             this.updatePathInput(message.path);
@@ -614,7 +646,6 @@ class SciFiTerminal {
 
     handleSystemInfoMessage(message) {
         if (message.type === "system_info" && message.action === "info") {
-            console.log("Received system info:", message.data);
             this.updateSystemInfo(message.data);
         }
     }
@@ -666,7 +697,6 @@ class SciFiTerminal {
 
     openFile(filename) {
         if (this.isConnected && this.websocket.readyState === WebSocket.OPEN) {
-            console.log("Opening file:", filename);
 
             // Get file info to determine mode
             const fileItem = this.getFileItemByName(filename);
@@ -674,6 +704,9 @@ class SciFiTerminal {
                 console.error("File not found:", filename);
                 return;
             }
+
+            // Show loading popup immediately
+            this.showFileViewer(filename, "loading", fileItem.size);
 
             // Calculate page size based on viewport
             const pageSize = this.calculatePageSize(fileItem.isBinary);
@@ -687,10 +720,8 @@ class SciFiTerminal {
             this.currentFileInfo.eof = false;
             this.currentFileInfo.sof = false;
 
-            // Show loading popup immediately
-            this.showFileViewer(filename, "loading", fileItem.size);
-
             // Request file content
+            console.log("Requesting with pagesize: ", pageSize);
             this.websocket.send(
                 JSON.stringify({
                     type: "file_system",
@@ -735,15 +766,25 @@ class SciFiTerminal {
         if (!popup) return 8192; // Default fallback
 
         // Get the specific content area for calculating size
-        const contentArea = isBinary
+        let contentArea = isBinary
             ? document.getElementById("binary-content")
             : document.getElementById("text-content");
 
         if (!contentArea) return 8192; // Fallback if content areas not found
 
-        const contentRect = contentArea.getBoundingClientRect();
-        const contentHeight = contentRect.height;
-        const contentWidth = contentRect.width;
+        let contentRect = contentArea.getBoundingClientRect();
+        let contentHeight = contentRect.height;
+        let contentWidth = contentRect.width;
+
+        if (contentHeight <= 0 || contentWidth <= 0) {
+            const contentAreas = document.getElementsByClassName("popup-content")
+            if (contentAreas.length > 0) {
+                contentArea = contentAreas[0];
+                contentRect = contentArea.getBoundingClientRect();
+                contentHeight = contentRect.height;
+                contentWidth = contentRect.width;
+            }
+        }
 
         if (contentHeight <= 0 || contentWidth <= 0) {
             return 8192; // Fallback if dimensions are zero
@@ -773,18 +814,20 @@ class SciFiTerminal {
         let pageSize = charsPerLine * numberOfLines;
 
         // For binary mode, adjust for hex representation (2 chars per byte + space)
+        /*
         if (isBinary) {
             // A byte takes up 2 hex chars + 1 space = 3 chars in total for hex representation.
             // Plus an additional space for grouping every X bytes (e.g., 4 bytes)
             // The ASCII part also consumes space
             // Let"s simplify and consider typical hex viewer layout:
             // "00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F   . . . . . . . . . . . . . . . ."
-            // A common width for a line in hex viewers is 16 bytes.
-            // So, calculate based on 16 bytes per line.
-            const bytesPerBinaryLine = 16;
-            pageSize = bytesPerBinaryLine * numberOfLines;
+            pageSize = this.hexViewBytesPerLine * numberOfLines;
             return Math.max(pageSize, 256); // Minimum 256 bytes for binary
         }
+        */
+
+        this.currentLineCount = numberOfLines;
+        this.currentCharsPerLine = charsPerLine;
 
         return Math.max(pageSize, 256); // Minimum 256 bytes for text
     }
@@ -903,17 +946,25 @@ class SciFiTerminal {
         hexElement.innerHTML = "";
         asciiElement.innerHTML = "";
 
-        // Split hex content into bytes
-        const hexBytes = hexContent.split(" ").filter(Boolean); // Filter out empty strings
-        const bytesPerLine = 16; // Standard hex viewer line length
+        const hexBytes = []
+        const byteCounts = []
+        const pages = hexContent.split("§").filter(Boolean);
+        pages.forEach((page, index) => {
+            const bytes = page.split(" ").filter(Boolean); // Filter out empty strings
+            byteCounts.push(bytes.length);
+            hexBytes.push(...bytes);
+        });
+
+        let globalByteIndex = 0; // Track byte index across all pages
+        let pageStartIndex = 0;  // Tracks where each page starts
 
         for (
             let lineIndex = 0;
-            lineIndex < Math.ceil(hexBytes.length / bytesPerLine);
+            lineIndex < Math.ceil(hexBytes.length / this.hexViewBytesPerLine);
             lineIndex++
         ) {
-            const lineStart = lineIndex * bytesPerLine;
-            const lineEnd = Math.min(lineStart + bytesPerLine, hexBytes.length);
+            const lineStart = lineIndex * this.hexViewBytesPerLine;
+            const lineEnd = Math.min(lineStart + this.hexViewBytesPerLine, hexBytes.length);
 
             // Create hex line
             const hexLine = document.createElement("div");
@@ -934,6 +985,19 @@ class SciFiTerminal {
                 const hex = hexBytes[i];
                 const byte = parseInt(hex, 16);
 
+                // Determine which page this byte belongs to
+                let pageIndex = 0;
+                let byteOffsetInPage = i;
+                let offsetSum = 0;
+                for (let p = 0; p < byteCounts.length; p++) {
+                    if (i < offsetSum + byteCounts[p]) {
+                        pageIndex = p;
+                        byteOffsetInPage = i - offsetSum;
+                        break;
+                    }
+                    offsetSum += byteCounts[p];
+                }
+
                 // Create hex byte element
                 const hexByte = document.createElement("span");
                 hexByte.className = "hex-byte";
@@ -941,6 +1005,26 @@ class SciFiTerminal {
                 hexByte.dataset.byteIndex = i;
                 hexByte.dataset.lineIndex = lineIndex;
                 hexByte.dataset.positionInLine = i - lineStart;
+
+                // Check if first or last N bytes of this page
+                const n = this.hexViewBytesPerLine;
+                if (byteOffsetInPage < n) {
+                    const stringPageIndex = String(pageIndex);
+                    if (stringPageIndex.length > 1) {
+                        hexByte.textContent = stringPageIndex;
+                    } else {
+                        hexByte.textContent = `⌃${stringPageIndex}`;
+                    }
+                } else if (byteOffsetInPage >= byteCounts[pageIndex] - n) {
+                    const stringPageIndex = String(pageIndex);
+                    if (stringPageIndex.length > 1) {
+                        hexByte.textContent = stringPageIndex;
+                    } else {
+                        hexByte.textContent = `⌄${stringPageIndex}`;
+                    }
+                } else {
+                    hexByte.textContent = hex.padStart(2, "0");
+                }
 
                 // Create ASCII character element
                 const asciiChar = document.createElement("span");
@@ -979,7 +1063,7 @@ class SciFiTerminal {
             }
 
             // Fill empty spaces if line is shorter than bytesPerLine
-            for (let i = lineEnd; i < lineStart + bytesPerLine; i++) {
+            for (let i = lineEnd; i < lineStart + this.hexViewBytesPerLine; i++) {
                 const hexByte = document.createElement("span");
                 hexByte.className = "hex-byte empty";
                 hexByte.textContent = "  "; // Two spaces for alignment
@@ -1076,9 +1160,9 @@ class SciFiTerminal {
     }
 
     handleChunkedFileContent(message) {
-        try {
-            console.log("Handling chunked file content for:", message.filename);
 
+        console.log(message)
+        try {
             // Update current file info
             this.currentFileInfo.filename = message.filename;
             this.currentFileInfo.totalSize = message.totalSize;
@@ -1093,6 +1177,8 @@ class SciFiTerminal {
                 this.currentFileInfo.mode = message.mode;
                 console.log("Set mode to:", message.mode);
             }
+
+            /* #Not needed?#
             // Recalculate pageSize here to ensure it"s accurate based on current view/popup size
             // This is crucial if the window was resized while the viewer was open.
             const newCalculatedPageSize = this.calculatePageSize(
@@ -1105,10 +1191,10 @@ class SciFiTerminal {
                 this.currentFileInfo.pageSize = newCalculatedPageSize;
                 console.log("Set/Updated page size to:", this.currentFileInfo.pageSize);
             }
+            */
 
             // Store loaded pages
             if (message.pages) {
-                console.log("Storing", message.pages.length, "pages");
                 message.pages.forEach((page) => {
                     this.currentFileInfo.loadedPages.set(page.page, page);
                     console.log("Stored page", page.page, "with offset", page.offset);
@@ -1124,10 +1210,8 @@ class SciFiTerminal {
 
             // Then, display content based on mode
             if (message.mode === "text") {
-                console.log("Displaying text content");
                 this.displayChunkedTextContent(); // No message needed, it reads from currentFileInfo
             } else if (message.mode === "binary") {
-                console.log("Displaying binary content");
                 this.displayChunkedBinaryContent(); // No message needed
                 
                 // Check if this is a media file and all content is loaded
@@ -1149,6 +1233,8 @@ class SciFiTerminal {
             return;
         }
 
+        const textContentEl = document.getElementById("text-content");
+        const scrollTopBefore = textContentEl ? textContentEl.scrollTop : 0;
         let fullContent = "";
 
         // Combine all loaded pages
@@ -1156,17 +1242,29 @@ class SciFiTerminal {
             .sort((a, b) => a.page - b.page);
 
         sortedPages.forEach((page) => {
+
+            // For debug replace first line of text with ^ times line-length
+            let lines = page.text.split("\n");
+            if (lines.length > 0) {
+                lines[0] = "^".repeat(Math.round(this.currentCharsPerLine/2));
+                page.text = lines.join("\n");
+            }
+            // For debug replace first last of text with ⌄ times line-length
+            if (lines.length > 0) {
+                lines[lines.length - 1] = "⌄".repeat(Math.round(this.currentCharsPerLine/2));
+                page.text = lines.join("\n");
+            }
+
             fullContent += page.text;
         });
 
         const textDisplayElement = document.getElementById("text-display");
         if (textDisplayElement) {
             textDisplayElement.textContent = fullContent;
-            console.log("Text content updated:", fullContent.substring(0, 100) + "..."); // Log a preview
-            // Ensure the parent container is visible if it wasn"t already (though showFileViewer should handle this)
-            document.getElementById("text-content").classList.remove("hidden");
-        } else {
-            console.error("text-display element not found!");
+            textContentEl.classList.remove("hidden");
+
+            // Restore scroll position
+            textContentEl.scrollTop = scrollTopBefore;
         }
     }
 
@@ -1177,6 +1275,9 @@ class SciFiTerminal {
             );
             return;
         }
+
+        const binaryContentEl = document.getElementById("binary-content-scroll-region");
+        const scrollTopBefore = binaryContentEl ? binaryContentEl.scrollTop : 0;
 
         const hexData = document.getElementById("hex-data");
         const asciiData = document.getElementById("ascii-data");
@@ -1193,7 +1294,7 @@ class SciFiTerminal {
         let fullHexContent = "";
         sortedPages.forEach((page) => {
             // Ensure spaces between hex values when combining
-            fullHexContent += page.text + " ";
+            fullHexContent += page.text + "§"; // Insert non-hex page separator
         });
 
         // Ensure the parent container is visible
@@ -1201,6 +1302,9 @@ class SciFiTerminal {
 
         // Pass the trim()med content to displayHexViewer
         this.displayHexViewer(fullHexContent.trim(), hexData, asciiData);
+
+        // Restore scroll position
+        binaryContentEl.scrollTop = scrollTopBefore;
     }
 
     enablePlayButton(filename, mediaType) {
@@ -1365,6 +1469,8 @@ class SciFiTerminal {
         )
             return;
 
+
+        console.log("Requesting with pagesize: ", this.currentFileInfo.pageSize);
         this.websocket.send(
             JSON.stringify({
                 type: "file_system",
@@ -1409,7 +1515,6 @@ class SciFiTerminal {
 
     populateFileExplorer(contents = [], currentPath = "") {
         const explorerContent = document.getElementById("explorer-content");
-        console.log("Populating file explorer with:", contents);
 
         // Store current directory contents for file info lookup
         this.currentDirectoryContents = contents;

@@ -102,86 +102,44 @@ const getFileInfo = async (filePath) => {
         console.error("Error getting file info:", error);
         return null;
     }
-};
-
-const getFileContent = async (filePath) => {
+};async function readFileChunk(filePath, start, end) {
+    const fd = await promisify(fs.open)(filePath, "r");
     try {
-        const stats = await promisify(fs.stat)(filePath);
-        if (stats.isDirectory()) {
-            throw new Error("Cannot read content of a directory");
-        }
-
-        // Check if file is text or binary
-        const buffer = await promisify(fs.readFile)(filePath);
-        const isText = isTextFile(buffer);
-
-        if (isText) {
-            // Text mode - return UTF-8 content
-            const content = buffer.toString("utf8");
-            return {
-                mode: "text",
-                content: content,
-                size: buffer.length,
-            };
-        } else {
-            // Binary mode - return hex representation
-            const hexContent = buffer.toString("hex").toUpperCase();
-            return {
-                mode: "binary",
-                content: hexContent,
-                size: buffer.length,
-            };
-        }
-    } catch (error) {
-        console.error("Error reading file content:", error);
-        throw error;
+        const length = end - start;
+        const buffer = Buffer.alloc(length);
+        await promisify(fs.read)(fd, buffer, 0, length, start);
+        return buffer;
+    } finally {
+        await promisify(fs.close)(fd);
     }
-};
+}
 
-const getFileContentChunked = async (
-    filePath,
-    mode,
-    pageSize,
-    byteOffset = 0,
-    asPage = 0,
-) => {
+const getFileContentChunked = async (filePath, mode, pageSize, byteOffset = 0, asPage = 0) => {
     try {
         const stats = await promisify(fs.stat)(filePath);
-        if (stats.isDirectory()) {
-            throw new Error("Cannot read content of a directory");
-        }
+        if (stats.isDirectory()) throw new Error("Cannot read content of a directory");
 
         const fileSize = stats.size;
         const isText = mode === "text";
 
-        // Calculate page boundaries
-        const pageStart = asPage * pageSize;
         const actualStart = Math.max(0, Math.min(byteOffset, fileSize - 1));
         const actualEnd = Math.min(actualStart + pageSize, fileSize);
 
-        // Read the specific chunk
-        const buffer = await promisify(fs.readFile)(filePath, {
-            start: actualStart,
-            end: actualEnd - 1,
-        });
+        console.log(">>Reading file chunk:", filePath, "from", actualStart, "to", actualEnd);
 
-        let content;
-        if (isText) {
-            // Text mode - return UTF-8 content
-            content = buffer.toString("utf8");
-        } else {
-            // Binary mode - return hex representation
-            content = buffer.toString("hex").toUpperCase();
-        }
+        const buffer = await readFileChunk(filePath, actualStart, actualEnd);
+
+        const content = isText
+            ? buffer.toString("utf8")
+            : buffer.toString("hex").toUpperCase();
 
         return {
-            mode: mode,
-            content: content,
-            size: buffer.length,
-            page: asPage,
-            offset: actualStart,
+            mode,
             eof: actualEnd >= fileSize,
             sof: actualStart === 0,
+            pages: [
+                { page: asPage, text: content, offset: actualStart, size: buffer.length },
+            ],
             totalSize: fileSize,
         };
     } catch (error) {
@@ -193,70 +151,49 @@ const getFileContentChunked = async (
 const getFileContentInitial = async (filePath, mode, pageSize) => {
     try {
         const stats = await promisify(fs.stat)(filePath);
-        if (stats.isDirectory()) {
-            throw new Error("Cannot read content of a directory");
-        }
+        if (stats.isDirectory()) throw new Error("Cannot read content of a directory");
 
         const fileSize = stats.size;
         const isText = mode === "text";
 
-        // If file is smaller than 3 pages, send it all
         if (fileSize <= pageSize * 3) {
-            const buffer = await promisify(fs.readFile)(filePath);
-            let content;
+            console.log(">>Sending file", filePath, "in full, size:", fileSize, "bytes");
+            const buffer = await readFileChunk(filePath, 0, fileSize);
 
-            if (isText) {
-                content = buffer.toString("utf8");
-            } else {
-                const hexContent = buffer.toString("hex").toUpperCase();
-                content = hexContent.match(/.{1,2}/g).join(" ");
-            }
+            const content = isText
+                ? buffer.toString("utf8")
+                : buffer.toString("hex").toUpperCase().match(/.{1,2}/g).join(" ");
 
             return {
-                mode: mode,
+                mode,
                 eof: true,
                 sof: true,
-                pages: [
-                    {
-                        page: 0,
-                        text: content,
-                        offset: 0,
-                    },
-                ],
+                pages: [{ page: 0, text: content, offset: 0, size: buffer.length }],
                 totalSize: fileSize,
             };
         } else {
-            // Send first 3 pages
+            console.log(">>File too large for initial read, size:", fileSize, "bytes, page size:", pageSize);
             const pages = [];
+
             for (let i = 0; i < 3; i++) {
                 const start = i * pageSize;
                 const end = Math.min(start + pageSize, fileSize);
+                console.log(">>>Reading page", i, "of file", filePath, "(", start, " -> ", end, ")");
 
-                const buffer = await promisify(fs.readFile)(filePath, {
-                    start,
-                    end: end - 1,
-                });
-                let content;
+                const buffer = await readFileChunk(filePath, start, end);
 
-                if (isText) {
-                    content = buffer.toString("utf8");
-                } else {
-                    const hexContent = buffer.toString("hex").toUpperCase();
-                    content = hexContent.match(/.{1,2}/g).join(" ");
-                }
+                const content = isText
+                    ? buffer.toString("utf8")
+                    : buffer.toString("hex").toUpperCase().match(/.{1,2}/g).join(" ");
 
-                pages.push({
-                    page: i,
-                    text: content,
-                    offset: start,
-                });
+                pages.push({ page: i, text: content, offset: start, size: buffer.length });
             }
 
             return {
-                mode: mode,
+                mode,
                 eof: false,
                 sof: true,
-                pages: pages,
+                pages,
                 totalSize: fileSize,
             };
         }
@@ -716,7 +653,7 @@ wss.on("connection", (ws) => {
                     );
                 } else if (parsed.action === "get_file_content") {
                     console.log(
-                        "File content request:",
+                        ">File content request:",
                         parsed.filename,
                         parsed.mode,
                         parsed.pagesize,
@@ -748,7 +685,7 @@ wss.on("connection", (ws) => {
                     }
                 } else if (parsed.action === "get_file_chunk") {
                     console.log(
-                        "File chunk request:",
+                        ">File chunk request:",
                         parsed.filepath,
                         parsed.mode,
                         parsed.pagesize,
