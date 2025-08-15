@@ -365,7 +365,7 @@ const getSystemInfo = async () => {
         }
       } else if (platform === 'win32') {
         osVersion = `Windows ${os.release()}`; // Fallback if systeminfo parsing fails
-        if (commandExists("sw_vers")) {
+        if (commandExists("systeminfo")) {
           // Use 'ver' for simple Windows OS version, or 'systeminfo' for more details.
           // Opting for 'systeminfo' as it provides a better 'OS Name'.
           const { stdout: systemInfoOutput } = await execAsync('systeminfo');
