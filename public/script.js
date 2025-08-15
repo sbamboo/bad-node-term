@@ -551,7 +551,7 @@ class SciFiTerminal {
 
     updateSystemInfo(data) {
         if (data.error) {
-            console.error('System info error:', data.error);
+            //console.error('System info error:', data.error);
             return;
         }
 
