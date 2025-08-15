@@ -14,13 +14,13 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
+const platform = os.platform();
 
 // File system state
 let fileServerCurrDir = process.cwd();
 
 // Platform-specific shell configuration
 const getShellCommand = () => {
-  const platform = os.platform();
   if (platform === 'win32') {
     return {
       command: 'cmd.exe',
@@ -321,7 +321,7 @@ const formatPathForDisplay = (filePath) => {
     }
 
     // On Windows, keep drive letter format but normalize separators
-    if (process.platform === 'win32' && filePath.includes(':\\')) {
+    if (platform === 'win32' && filePath.includes(':\\')) {
       return filePath.replace(/\\/g, '/');
     }
 
@@ -339,7 +339,6 @@ const getSystemInfo = async () => {
     const execAsync = promisify(exec);
 
     // Basic system info
-    const platform = os.platform(); // 'win32', 'darwin', 'linux'
     const hostname = os.hostname();
     const arch = os.arch(); // 'x64', 'arm64' etc.
     const nodeVersion = process.version;
@@ -646,7 +645,7 @@ wss.on('connection', (ws) => {
             if (
               parsed.path.startsWith('/') ||
               parsed.path.startsWith('~') ||
-              (process.platform === 'win32' && /^[A-Za-z]:[\\/]/.test(parsed.path))
+              (platform === 'win32' && /^[A-Za-z]:[\\/]/.test(parsed.path))
             ) {
               // Absolute path - resolve it directly
               if (parsed.path.startsWith('~')) {
@@ -831,6 +830,6 @@ wss.on('connection', (ws) => {
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Cross-Platform Web Terminal server running on http://localhost:${PORT}`);
-  console.log(`Platform: ${os.platform()}`);
+  console.log(`Platform: ${platform}`);
   console.log(`Shell: ${getShellCommand().command}`);
 });
