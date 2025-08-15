@@ -380,7 +380,7 @@ const getSystemInfo = async () => {
       console.error('Error getting OS version or uptime:', error);
     }
 
-    // CPU info (using os.cpus() only)
+    // CPU info
     let cpuModel = 'Unknown';
     let cpuCores = os.cpus().length; // Logical cores
     try {
@@ -392,32 +392,36 @@ const getSystemInfo = async () => {
       console.error('Error getting CPU info (os.cpus()):', error);
     }
 
-    // GPU info (cannot get reliably without wmic or external tools on Windows)
+    // GPU info
     let gpuModel = 'None detected';
     if (platform === 'linux') {
-      try {
-        const { stdout } = await execAsync(
-          'lspci | grep -i vga | head -1 | cut -d":" -f3 | xargs',
-        );
-        if (stdout.trim()) {
-          gpuModel = stdout.trim();
+      if (commandsExists(["lspci","grep","head","cut","xargs"])) {
+        try {
+          const { stdout } = await execAsync(
+            'lspci | grep -i vga | head -1 | cut -d":" -f3 | xargs',
+          );
+          if (stdout.trim()) {
+            gpuModel = stdout.trim();
+          }
+        } catch (error) {
+          console.error('Error getting GPU info (Linux):', error);
         }
-      } catch (error) {
-        console.error('Error getting GPU info (Linux):', error);
       }
     } else if (platform === 'darwin') {
-      try {
-        const { stdout } = await execAsync(
-          'system_profiler SPDisplaysDataType | grep "Chipset Model" | head -1 | cut -d":" -f2 | xargs',
-        );
-        if (stdout.trim()) {
-          gpuModel = stdout.trim();
+      if (commandsExists(["system_profiler","grep","head","cut","xargs"])) {
+        try {
+          const { stdout } = await execAsync(
+            'system_profiler SPDisplaysDataType | grep "Chipset Model" | head -1 | cut -d":" -f2 | xargs',
+          );
+          if (stdout.trim()) {
+            gpuModel = stdout.trim();
+          }
+        } catch (error) {
+          console.error('Error getting GPU info (macOS):', error);
         }
-      } catch (error) {
-        console.error('Error getting GPU info (macOS):', error);
       }
     }
-    // Windows GPU detection removed as it relied on wmic
+    //TODO: Windows GPU detection
 
     // Memory usage (using native os module - no change)
     const totalMem = os.totalmem();
@@ -439,19 +443,21 @@ const getSystemInfo = async () => {
     let storageInfo = { total: 0, used: 0, free: 0, usagePercent: 0 };
     try {
       if (platform === 'linux' || platform === 'darwin') {
-        const { stdout } = await execAsync(
-          'df -k / | tail -1 | awk \'{print $2, $3, $4}\'',
-        ); // -k for KB units
-        const [totalKb, usedKb, freeKb] = stdout
-          .trim()
-          .split(' ')
-          .map(Number);
-        storageInfo = {
-          total: Math.round(totalKb / (1024 * 1024)), // Convert to GB
-          used: Math.round(usedKb / (1024 * 1024)),
-          free: Math.round(freeKb / (1024 * 1024)),
-          usagePercent: totalKb > 0 ? Math.round((usedKb / totalKb) * 100) : 0,
-        };
+        if (commandsExists(["df","tail","awk"])) {
+          const { stdout } = await execAsync(
+            'df -k / | tail -1 | awk \'{print $2, $3, $4}\'',
+          ); // -k for KB units
+          const [totalKb, usedKb, freeKb] = stdout
+            .trim()
+            .split(' ')
+            .map(Number);
+          storageInfo = {
+            total: Math.round(totalKb / (1024 * 1024)), // Convert to GB
+            used: Math.round(usedKb / (1024 * 1024)),
+            free: Math.round(freeKb / (1024 * 1024)),
+            usagePercent: totalKb > 0 ? Math.round((usedKb / totalKb) * 100) : 0,
+          };
+        }
       } else if (platform === 'win32') {
         // Without wmic, we can't get all logical disk info easily.
         // We can get the info for the drive of the current working directory.
@@ -498,18 +504,22 @@ const getSystemInfo = async () => {
         }
       }
     } catch (error) {
-      console.error('Error getting storage info (Windows without wmic):', error);
+      console.error('Error getting storage info:', error);
     }
 
     // Process count (no change - tasklist is fine)
     let processCount = 0;
     try {
       if (platform === 'linux' || platform === 'darwin') {
-        const { stdout } = await execAsync('ps aux | wc -l');
-        processCount = parseInt(stdout.trim()) - 1; // Subtract header line
+        if (commandsExists(["ps","wc"])) {
+          const { stdout } = await execAsync('ps aux | wc -l');
+          processCount = parseInt(stdout.trim()) - 1; // Subtract header line
+        }
       } else if (platform === 'win32') {
-        const { stdout } = await execAsync('tasklist /nh /fo csv');
-        processCount = stdout.trim().split('\n').filter(Boolean).length;
+        if (commandExists(["tasklist"])) {
+          const { stdout } = await execAsync('tasklist /nh /fo csv');
+          processCount = stdout.trim().split('\n').filter(Boolean).length;
+        }
       }
     } catch (error) {
       console.error('Error getting process count:', error);
@@ -564,7 +574,11 @@ wss.on('connection', (ws) => {
 
   var shell;
   if (platform === 'win32') {
-    shell = 'powershell.exe';
+    if (commandExists(["powershell"])) {
+      shell = 'powershell.exe';
+    } else {
+      shell = 'cmd.exe'
+    }
   } else {
     shell = process.env.SHELL || 'bash'
   }
