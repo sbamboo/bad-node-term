@@ -19,6 +19,31 @@ const platform = os.platform();
 // File system state
 let fileServerCurrDir = process.cwd();
 
+function commandExists(cmd) {
+  return new Promise((resolve) => {
+    // Use 'where' on Windows, 'which' elsewhere
+    const checker = process.platform === 'win32' ? 'where' : 'which';
+    const ps = spawn(checker, [cmd]);
+
+    ps.on('error', () => resolve(false));
+    ps.on('close', (code) => resolve(code === 0));
+  });
+}
+
+async function commandsExistAsync(commands) {
+  for (const cmd of commands) {
+    const exists = await commandExists(cmd);
+    if (!exists) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function commandsExist(commands) {
+  return commands.every(commandExists);
+}
+
 // File system helper functions
 const getFileInfo = async (filePath) => {
   try {
