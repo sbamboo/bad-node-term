@@ -20,9 +20,10 @@ const platform = os.platform();
 let fileServerCurrDir = process.cwd();
 
 function commandExists(cmd) {
-  if (process.env.WEB_CONTAINER || !fs.existsSync('/proc')) {
+  /*if (process.env.WEB_CONTAINER || !fs.existsSync('/proc')) {
     return false;
   }
+  */
   return new Promise((resolve) => {
     // Use 'where' on Windows, 'which' elsewhere
     const checker = process.platform === 'win32' ? 'where' : 'which';
