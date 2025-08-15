@@ -24,9 +24,9 @@ class SciFiTerminal {
 
         // Media file extensions
         this.mediaExtensions = {
-            image: ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'],
-            audio: ['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac'],
-            video: ['.mp4', '.webm', '.avi', '.mov', '.mkv', '.wmv', '.flv']
+            image: [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".svg"],
+            audio: [".mp3", ".wav", ".ogg", ".m4a", ".aac", ".flac"],
+            video: [".mp4", ".webm", ".avi", ".mov", ".mkv", ".wmv", ".flv"]
         };
 
         this.initStartupSequence();
@@ -38,10 +38,10 @@ class SciFiTerminal {
             const audio = new Audio(path);
             audio.volume = 0.3;
             audio.play().catch(() => {
-                // Silently fail if audio file doesn't exist or can't play
+                // Silently fail if audio file doesn"t exist or can"t play
             });
         } catch (error) {
-            // Silently fail if audio file doesn't exist
+            // Silently fail if audio file doesn"t exist
         }
     }
 
@@ -65,7 +65,7 @@ class SciFiTerminal {
             this.currentlyPlaying[path] = audio;
 
             // Clean up reference when sound ends
-            audio.addEventListener('ended', () => {
+            audio.addEventListener("ended", () => {
                 delete this.currentlyPlaying[path];
             });
 
@@ -91,7 +91,7 @@ class SciFiTerminal {
             audio.currentTime = 0;
 
             audio.play().catch(() => {
-                // Silently fail if can't play
+                // Silently fail if can"t play
             });
 
         } catch (error) {
@@ -101,55 +101,55 @@ class SciFiTerminal {
 
     // Startup sequence
     initStartupSequence() {
-        const enterBtn = document.getElementById('enter-btn');
-        enterBtn.addEventListener('click', () => {
-            this.playSound('sfx/launch.wav');
+        const enterBtn = document.getElementById("enter-btn");
+        enterBtn.addEventListener("click", () => {
+            this.playSound("sfx/launch.wav");
             this.startAnimationSequence();
         });
     }
 
     async startAnimationSequence() {
-        const startupScreen = document.getElementById('startup-screen');
-        const mainInterface = document.getElementById('main-interface');
+        const startupScreen = document.getElementById("startup-screen");
+        const mainInterface = document.getElementById("main-interface");
 
         // Hide startup screen
-        startupScreen.style.display = 'none';
+        startupScreen.style.display = "none";
 
         // Show dot
-        const dot = document.createElement('div');
-        dot.className = 'startup-dot';
+        const dot = document.createElement("div");
+        dot.className = "startup-dot";
         document.body.appendChild(dot);
 
         await this.sleep(500);
-        this.playSound('sfx/uianim.wav');
+        this.playSound("sfx/uianim.wav");
 
         // Animate dot to line
-        dot.style.transition = 'all 1s ease';
-        dot.style.width = '200px';
-        dot.style.height = '2px';
-        dot.style.borderRadius = '0';
+        dot.style.transition = "all 1s ease";
+        dot.style.width = "200px";
+        dot.style.height = "2px";
+        dot.style.borderRadius = "0";
 
         await this.sleep(1000);
-        this.playSound('sfx/uianim.wav');
+        this.playSound("sfx/uianim.wav");
 
         // Animate line to square
-        dot.style.width = '400px';
-        dot.style.height = '300px';
-        dot.style.background = 'transparent';
-        dot.style.border = '2px solid #00ff41';
-        dot.style.borderRadius = '8px';
+        dot.style.width = "400px";
+        dot.style.height = "300px";
+        dot.style.background = "transparent";
+        dot.style.border = "2px solid #00ff41";
+        dot.style.borderRadius = "8px";
 
         await this.sleep(1000);
-        this.playSound('sfx/uianim.wav');
+        this.playSound("sfx/uianim.wav");
 
         // Calculate terminal position and dimensions
         const terminalContainer =
-            document.getElementById('terminal-container');
+            document.getElementById("terminal-container");
         const terminalRect = terminalContainer.getBoundingClientRect();
 
         // Scale UP square to match terminal dimensions (2/3 width, full height, top-left aligned)
-        dot.style.transition = 'all 1.5s ease';
-        dot.style.position = 'fixed';
+        dot.style.transition = "all 1.5s ease";
+        dot.style.position = "fixed";
         dot.style.width = `${terminalRect.width}px`;
         dot.style.height = `${terminalRect.height}px`;
         dot.style.left = `${terminalRect.left}px`;
@@ -157,11 +157,11 @@ class SciFiTerminal {
         // The square will scale UP from 400x300 to terminal dimensions
 
         await this.sleep(1500);
-        this.playSound('sfx/uianim.wav');
+        this.playSound("sfx/uianim.wav");
 
         // Remove animation element and show main interface
         dot.remove();
-        mainInterface.classList.remove('hidden');
+        mainInterface.classList.remove("hidden");
 
         // Initialize terminal
         this.setupTerminal();
@@ -189,34 +189,34 @@ class SciFiTerminal {
     }
 
     async showInfoPanel() {
-        const infoPanel = document.getElementById('info-panel');
-        infoPanel.classList.remove('hidden');
-        infoPanel.style.transform = 'translateX(100%)';
-        infoPanel.style.transition = 'transform 0.8s ease';
+        const infoPanel = document.getElementById("info-panel");
+        infoPanel.classList.remove("hidden");
+        infoPanel.style.transform = "translateX(100%)";
+        infoPanel.style.transition = "transform 0.8s ease";
 
         await this.sleep(50);
-        infoPanel.style.transform = 'translateX(0)';
+        infoPanel.style.transform = "translateX(0)";
 
         // Animate in text content
         setTimeout(() => {
-            const infoValues = infoPanel.querySelectorAll('.info-value');
+            const infoValues = infoPanel.querySelectorAll(".info-value");
             infoValues.forEach((value, index) => {
                 setTimeout(() => {
-                    value.classList.add('text-appear');
-                    this.playSoundRestart('sfx/appear.wav');
+                    value.classList.add("text-appear");
+                    this.playSoundRestart("sfx/appear.wav");
                 }, index * 100);
             });
         }, 800);
     }
 
     async showFileExplorer() {
-        const fileExplorer = document.getElementById('file-explorer');
-        fileExplorer.classList.remove('hidden');
-        fileExplorer.style.transform = 'translateY(100%)';
-        fileExplorer.style.transition = 'transform 0.8s ease';
+        const fileExplorer = document.getElementById("file-explorer");
+        fileExplorer.classList.remove("hidden");
+        fileExplorer.style.transform = "translateY(100%)";
+        fileExplorer.style.transition = "transform 0.8s ease";
 
         await this.sleep(50);
-        fileExplorer.style.transform = 'translateY(0)';
+        fileExplorer.style.transform = "translateY(0)";
     }
 
     sleep(ms) {
@@ -227,31 +227,31 @@ class SciFiTerminal {
         // Initialize xterm.js terminal with sci-fi theme
         this.terminal = new Terminal({
             cursorBlink: true,
-            cursorStyle: 'block',
+            cursorStyle: "block",
             fontSize: 14,
             fontFamily: '"Courier New", "Monaco", "Menlo", monospace',
             theme: {
-                background: 'transparent',
-                foreground: '#00ff41',
-                cursor: '#00ff41',
-                cursorAccent: '#000000',
-                selection: 'rgba(0, 255, 65, 0.3)',
-                black: '#000000',
-                red: '#ff0040',
-                green: '#00ff41',
-                yellow: '#ffff00',
-                blue: '#0080ff',
-                magenta: '#ff00ff',
-                cyan: '#00ffff',
-                white: '#ffffff',
-                brightBlack: '#404040',
-                brightRed: '#ff4080',
-                brightGreen: '#80ff80',
-                brightYellow: '#ffff80',
-                brightBlue: '#80c0ff',
-                brightMagenta: '#ff80ff',
-                brightCyan: '#80ffff',
-                brightWhite: '#ffffff'
+                background: "transparent",
+                foreground: "#00ff41",
+                cursor: "#00ff41",
+                cursorAccent: "#000000",
+                selection: "rgba(0, 255, 65, 0.3)",
+                black: "#000000",
+                red: "#ff0040",
+                green: "#00ff41",
+                yellow: "#ffff00",
+                blue: "#0080ff",
+                magenta: "#ff00ff",
+                cyan: "#00ffff",
+                white: "#ffffff",
+                brightBlack: "#404040",
+                brightRed: "#ff4080",
+                brightGreen: "#80ff80",
+                brightYellow: "#ffff80",
+                brightBlue: "#80c0ff",
+                brightMagenta: "#ff80ff",
+                brightCyan: "#80ffff",
+                brightWhite: "#ffffff"
             },
             allowTransparency: true,
             convertEol: true,
@@ -267,103 +267,113 @@ class SciFiTerminal {
         this.terminal.loadAddon(new WebLinksAddon.WebLinksAddon());
 
         // Open terminal in the container
-        this.terminal.open(document.getElementById('terminal'));
+        this.terminal.open(document.getElementById("terminal"));
 
         // Initial fit
         this.fitAddon.fit();
 
         // Show connecting message
         this.terminal.write(
-            '\r\n\x1b[1;32m> NEXUS TERMINAL INITIALIZING...\x1b[0m\r\n'
+            "\r\n\x1b[1;32m> NEXUS TERMINAL INITIALIZING...\x1b[0m\r\n"
         );
         this.terminal.write(
-            '\x1b[1;36m> ESTABLISHING SECURE CONNECTION...\x1b[0m\r\n'
+            "\x1b[1;36m> ESTABLISHING SECURE CONNECTION...\x1b[0m\r\n"
         );
     }
 
     connectWebSocket() {
         const protocol =
-            window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            window.location.protocol === "https:" ? "wss:" : "ws:";
         const wsUrl = `${protocol}//${window.location.host}`;
 
         this.websocket = new WebSocket(wsUrl);
 
         this.websocket.onopen = () => {
             this.isConnected = true;
-            this.updateConnectionStatus('ONLINE');
-            console.log('WebSocket connection established');
+            this.updateConnectionStatus("ONLINE");
+            console.log("WebSocket connection established");
 
             // Clear loading message and send terminal size
             this.terminal.clear();
-            this.terminal.write('\x1b[1;32m> CONNECTION ESTABLISHED\x1b[0m\r\n');
-            this.terminal.write('\x1b[1;36m> NEXUS TERMINAL READY\x1b[0m\r\n\r\n');
+            this.sendTerminalOutput("\x1b[1;32m> CONNECTION ESTABLISHED\x1b[0m\r\n");
+            this.sendTerminalOutput("\x1b[1;36m> NEXUS TERMINAL READY\x1b[0m\r\n\r\n");
             this.sendTerminalSize();
         };
 
         this.websocket.onmessage = (event) => {
             try {
-                // Try to parse as JSON for file system messages
+                // Try to parse as JSON for all messages
                 const parsed = JSON.parse(event.data);
-                console.log('Received WebSocket message:', parsed);
+                console.log("Received WebSocket message:", parsed);
 
-                if (parsed.type === 'file_system') {
+                if (parsed.type === "io") {
+                    if (parsed.action === "stdout") {
+                        this.terminal.write(parsed.content);
+                        // Play sound on first prompt
+                        if (
+                            !this.hasPlayedFirstPrompt &&
+                            (parsed.content.includes("$") || parsed.content.includes(">"))
+                        ) {
+                            this.hasPlayedFirstPrompt = true;
+                            this.playSoundRestart("sfx/appear.wav");
+                        }
+                    }
+                } else if (parsed.type === "file_system") {
                     this.handleFileSystemMessage(parsed);
-                    return;
-                }
-                if (parsed.type === 'system_info') {
+                } else if (parsed.type === "system_info") {
                     this.handleSystemInfoMessage(parsed);
-                    return;
+                } else if (parsed.type === "error") {
+                    console.error("Server error:", parsed.message);
+                    this.terminal.write(`\r\n\x1b[1;31m> SERVER ERROR: ${parsed.message}\x1b[0m\r\n`);
+                } else {
+                    console.log("Unknown message type:", parsed.type);
                 }
-
-                // Unknown message type, log it
-                console.log('Unknown message type:', parsed.type);
             } catch (e) {
-                console.log('Error parsing JSON:', e);
-                console.log('Raw message data:', event.data);
-
-                // Not JSON, treat as terminal output
-                this.terminal.write(event.data);
-
-                // Play sound on first prompt
-                if (
-                    !this.hasPlayedFirstPrompt &&
-                    (event.data.includes('$') || event.data.includes('>'))
-                ) {
-                    this.hasPlayedFirstPrompt = true;
-                    this.playSoundRestart('sfx/appear.wav');
-                }
+                console.error("Error parsing JSON message from server:", e);
+                console.log("Raw message data:", event.data);
+                this.terminal.write("\r\n\x1b[1;31m> COMMUNICATION ERROR: Received malformed message\x1b[0m\r\n");
             }
         };
 
         this.websocket.onclose = () => {
             this.isConnected = false;
-            this.updateConnectionStatus('OFFLINE');
-            console.log('WebSocket connection closed');
+            this.updateConnectionStatus("OFFLINE");
+            console.log("WebSocket connection closed");
 
             // Show disconnection message
-            this.terminal.write('\r\n\x1b[1;31m> CONNECTION TERMINATED\x1b[0m\r\n');
-            this.terminal.write('\x1b[1;33m> REFRESH TO RECONNECT\x1b[0m\r\n');
+            this.terminal.write("\r\n\x1b[1;31m> CONNECTION TERMINATED\x1b[0m\r\n");
+            this.terminal.write("\x1b[1;33m> REFRESH TO RECONNECT\x1b[0m\r\n");
         };
 
         this.websocket.onerror = (error) => {
-            console.error('WebSocket error:', error);
-            this.updateConnectionStatus('ERROR');
-            this.terminal.write('\r\n\x1b[1;31m> CONNECTION ERROR\x1b[0m\r\n');
+            console.error("WebSocket error:", error);
+            this.updateConnectionStatus("ERROR");
+            this.terminal.write("\r\n\x1b[1;31m> CONNECTION ERROR\x1b[0m\r\n");
         };
+    }
+
+    sendTerminalInput(data) {
+        if (this.isConnected && this.websocket.readyState === WebSocket.OPEN) {
+            this.websocket.send(JSON.stringify({ type: "io", action: "stdin", content: data }));
+        }
+    }
+
+    sendTerminalOutput(data) {
+        // This method is for internal use when the frontend needs to write to terminal
+        // directly, not for sending data to the backend.
+        this.terminal.write(data);
     }
 
     setupEventListeners() {
         // Handle terminal input
         this.terminal.onData((data) => {
-            if (this.isConnected && this.websocket.readyState === WebSocket.OPEN) {
-                this.websocket.send(data);
-                // Play key sound for each keystroke
-                this.playSound('sfx/stdin.wav');
-            }
+            this.sendTerminalInput(data);
+            // Play key sound for each keystroke
+            this.playSound("sfx/stdin.wav");
         });
 
         // Handle window resize
-        window.addEventListener('resize', () => {
+        window.addEventListener("resize", () => {
             this.fitAddon.fit();
             this.sendTerminalSize();
             // Update page size for file viewer
@@ -376,32 +386,32 @@ class SciFiTerminal {
         });
 
         // Handle keyboard shortcuts
-        document.addEventListener('keydown', (event) => {
+        document.addEventListener("keydown", (event) => {
             // Ctrl+L to clear terminal
-            if (event.ctrlKey && event.key === 'l') {
+            if (event.ctrlKey && event.key === "l") {
                 event.preventDefault();
                 this.terminal.clear();
             }
 
             // Escape key to close file viewer popup
-            if (event.key === 'Escape') {
+            if (event.key === "Escape") {
                 this.closeFileViewer();
             }
         });
 
         // Setup file viewer popup close button
-        const closeButton = document.getElementById('popup-close');
+        const closeButton = document.getElementById("popup-close");
         if (closeButton) {
-            closeButton.addEventListener('click', () => this.closeFileViewer());
+            closeButton.addEventListener("click", () => this.closeFileViewer());
         }
 
         // Setup click outside popup to clear highlights
-        document.addEventListener('click', (event) => {
-            const popup = document.getElementById('file-viewer-popup');
+        document.addEventListener("click", (event) => {
+            const popup = document.getElementById("file-viewer-popup");
             if (
                 popup &&
                 !popup.contains(event.target) &&
-                !popup.classList.contains('hidden')
+                !popup.classList.contains("hidden")
             ) {
                 this.clearAllHighlights();
             }
@@ -413,18 +423,18 @@ class SciFiTerminal {
 
     setupVirtualScrolling() {
         // Monitor scroll events in text and binary content areas
-        const textContent = document.getElementById('text-content');
-        const binaryContent = document.getElementById('binary-content');
+        const textContent = document.getElementById("text-content");
+        const binaryContent = document.getElementById("binary-content");
 
         if (textContent) {
-            textContent.addEventListener('scroll', (event) => {
-                this.handleContentScroll(event, 'text');
+            textContent.addEventListener("scroll", (event) => {
+                this.handleContentScroll(event, "text");
             });
         }
 
         if (binaryContent) {
-            binaryContent.addEventListener('scroll', (event) => {
-                this.handleContentScroll(event, 'binary');
+            binaryContent.addEventListener("scroll", (event) => {
+                this.handleContentScroll(event, "binary");
             });
         }
     }
@@ -440,7 +450,7 @@ class SciFiTerminal {
         const scrollHeight = element.scrollHeight;
         const clientHeight = element.clientHeight;
 
-        // Check if we're near the bottom or top
+        // Check if we"re near the bottom or top
         const nearBottom = scrollTop + clientHeight >= scrollHeight - 100;
         const nearTop = scrollTop <= 100;
 
@@ -468,11 +478,11 @@ class SciFiTerminal {
     updatePageSize() {
         if (this.currentFileInfo && this.currentFileInfo.filename) {
             const newPageSize = this.calculatePageSize(
-                this.currentFileInfo.mode === 'binary'
+                this.currentFileInfo.mode === "binary"
             );
             if (newPageSize !== this.currentFileInfo.pageSize) {
                 this.currentFileInfo.pageSize = newPageSize;
-                console.log('Page size updated to:', newPageSize);
+                console.log("Page size updated to:", newPageSize);
                 // Re-request chunks if page size changes and content is loaded
                 if (this.currentFileInfo.loadedPages.size > 0) {
                     this.currentFileInfo.loadedPages.clear(); // Clear old pages
@@ -487,7 +497,7 @@ class SciFiTerminal {
     sendTerminalSize() {
         if (this.isConnected && this.websocket.readyState === WebSocket.OPEN) {
             const size = {
-                type: 'resize',
+                type: "resize",
                 cols: this.terminal.cols,
                 rows: this.terminal.rows
             };
@@ -495,22 +505,22 @@ class SciFiTerminal {
             try {
                 this.websocket.send(JSON.stringify(size));
             } catch (error) {
-                console.warn('Failed to send terminal size:', error);
+                console.warn("Failed to send terminal size:", error);
             }
         }
     }
 
     updateConnectionStatus(status) {
-        const statusElement = document.getElementById('connection-status');
+        const statusElement = document.getElementById("connection-status");
         statusElement.textContent = status;
 
         // Update status styling based on connection
-        if (status === 'ONLINE') {
-            statusElement.style.color = '#00ff41';
-        } else if (status === 'OFFLINE') {
-            statusElement.style.color = '#ff0040';
+        if (status === "ONLINE") {
+            statusElement.style.color = "#00ff41";
+        } else if (status === "OFFLINE") {
+            statusElement.style.color = "#ff0040";
         } else {
-            statusElement.style.color = '#ffff00';
+            statusElement.style.color = "#ffff00";
         }
     }
 
@@ -522,9 +532,9 @@ class SciFiTerminal {
             const minutes = Math.floor((uptime % 3600000) / 60000);
             const seconds = Math.floor((uptime % 60000) / 1000);
 
-            const uptimeElement = document.getElementById('uptime-info');
+            const uptimeElement = document.getElementById("uptime-info");
             if (uptimeElement) {
-                uptimeElement.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                uptimeElement.textContent = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
             }
         }, 1000);
 
@@ -538,12 +548,12 @@ class SciFiTerminal {
         if (this.isConnected && this.websocket.readyState === WebSocket.OPEN) {
             this.websocket.send(
                 JSON.stringify({
-                    type: 'file_system',
-                    action: 'get_contents'
+                    type: "file_system",
+                    action: "get_contents"
                 })
             );
             // Play sound effect for initial load
-            this.playSoundRestart('sfx/appear.wav');
+            this.playSoundRestart("sfx/appear.wav");
         }
     }
 
@@ -551,39 +561,39 @@ class SciFiTerminal {
         if (this.isConnected && this.websocket.readyState === WebSocket.OPEN) {
             this.websocket.send(
                 JSON.stringify({
-                    type: 'system_info',
-                    action: 'get_info'
+                    type: "system_info",
+                    action: "get_info"
                 })
             );
         }
     }
 
     handleFileSystemMessage(message) {
-        console.log('Handling file system message:', message.action);
+        console.log("Handling file system message:", message.action);
 
-        if (message.type === 'file_system' && message.action === 'contents') {
-            console.log('Received file system message with path:', message.path);
+        if (message.type === "file_system" && message.action === "contents") {
+            console.log("Received file system message with path:", message.path);
             this.populateFileExplorer(message.contents, message.path);
             // Update the path input field with current directory
             this.updatePathInput(message.path);
             // Play sound effect for directory change
-            this.playSound('sfx/panels.wav');
+            this.playSound("sfx/panels.wav");
         } else if (
-            message.type === 'file_system' &&
-            message.action === 'file_content'
+            message.type === "file_system" &&
+            message.action === "file_content"
         ) {
-            console.log('Received file content:', message.filename, message.mode);
+            console.log("Received file content:", message.filename, message.mode);
 
             if (message.pages) {
                 // Handle chunked content with pages
                 console.log(
-                    'Handling chunked file content with pages:',
+                    "Handling chunked file content with pages:",
                     message.pages.length
                 );
                 this.handleChunkedFileContent(message);
             } else {
                 // Handle single content (legacy or small files)
-                console.log('Handling single file content');
+                console.log("Handling single file content");
                 this.showFileViewerLegacy(
                     message.filename,
                     message.mode,
@@ -592,49 +602,49 @@ class SciFiTerminal {
                 );
             }
         } else if (
-            message.type === 'file_system' &&
-            message.action === 'error'
+            message.type === "file_system" &&
+            message.action === "error"
         ) {
-            console.error('File system error:', message.message);
+            console.error("File system error:", message.message);
             // You could display this error to the user if needed
         } else {
-            console.log('Unknown file system action:', message.action);
+            console.log("Unknown file system action:", message.action);
         }
     }
 
     handleSystemInfoMessage(message) {
-        if (message.type === 'system_info' && message.action === 'info') {
-            console.log('Received system info:', message.data);
+        if (message.type === "system_info" && message.action === "info") {
+            console.log("Received system info:", message.data);
             this.updateSystemInfo(message.data);
         }
     }
 
     updateSystemInfo(data) {
         if (data.error) {
-            //console.error('System info error:', data.error);
+            //console.error("System info error:", data.error);
             return;
         }
 
         // Update all system info fields
-        this.updateInfoField('nexus-version', `${data.nexusVersion} (${data.nexusBranch})`);
-        this.updateInfoField('node-version', data.nodeVersion);
-        this.updateInfoField('host-os', data.hostOS);
-        this.updateInfoField('host-platform', data.hostPlatform);
-        this.updateInfoField('hostname', data.hostname);
-        this.updateInfoField('cpu-model', data.cpuModel);
-        this.updateInfoField('cpu-cores', data.cpuCores);
-        this.updateInfoField('gpu-model', data.gpuModel);
-        this.updateInfoField('current-user', data.currentUser);
-        this.updateInfoField('process-count', data.processCount);
+        this.updateInfoField("nexus-version", `${data.nexusVersion} (${data.nexusBranch})`);
+        this.updateInfoField("node-version", data.nodeVersion);
+        this.updateInfoField("host-os", data.hostOS);
+        this.updateInfoField("host-platform", data.hostPlatform);
+        this.updateInfoField("hostname", data.hostname);
+        this.updateInfoField("cpu-model", data.cpuModel);
+        this.updateInfoField("cpu-cores", data.cpuCores);
+        this.updateInfoField("gpu-model", data.gpuModel);
+        this.updateInfoField("current-user", data.currentUser);
+        this.updateInfoField("process-count", data.processCount);
         this.updateInfoField(
-            'memory-usage',
+            "memory-usage",
             `${data.memoryUsed}GB / ${data.memoryTotal}GB (${data.memoryUsage}%)`
         );
         this.updateInfoField(
-            'storage-usage',
+            "storage-usage",
             `${data.storageUsed}MB / ${data.storageTotal}MB (${data.storageUsage}%)`
         );
-        this.updateInfoField('cpu-usage', `${data.cpuUsage}%`);
+        this.updateInfoField("cpu-usage", `${data.cpuUsage}%`);
 
         // Update server uptime
         const serverUptime = data.serverUptime;
@@ -642,8 +652,8 @@ class SciFiTerminal {
         const minutes = Math.floor((serverUptime % 3600) / 60);
         const seconds = Math.floor(serverUptime % 60);
         this.updateInfoField(
-            'server-uptime',
-            `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+            "server-uptime",
+            `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`
         );
     }
 
@@ -656,18 +666,18 @@ class SciFiTerminal {
 
     openFile(filename) {
         if (this.isConnected && this.websocket.readyState === WebSocket.OPEN) {
-            console.log('Opening file:', filename);
+            console.log("Opening file:", filename);
 
             // Get file info to determine mode
             const fileItem = this.getFileItemByName(filename);
             if (!fileItem) {
-                console.error('File not found:', filename);
+                console.error("File not found:", filename);
                 return;
             }
 
             // Calculate page size based on viewport
             const pageSize = this.calculatePageSize(fileItem.isBinary);
-            const mode = fileItem.isBinary ? 'binary' : 'text';
+            const mode = fileItem.isBinary ? "binary" : "text";
 
             // Update current file info
             this.currentFileInfo.filename = filename;
@@ -678,13 +688,13 @@ class SciFiTerminal {
             this.currentFileInfo.sof = false;
 
             // Show loading popup immediately
-            this.showFileViewer(filename, 'loading', fileItem.size);
+            this.showFileViewer(filename, "loading", fileItem.size);
 
             // Request file content
             this.websocket.send(
                 JSON.stringify({
-                    type: 'file_system',
-                    action: 'get_file_content',
+                    type: "file_system",
+                    action: "get_file_content",
                     filename: filename,
                     mode: mode,
                     pagesize: pageSize
@@ -710,24 +720,24 @@ class SciFiTerminal {
         }
 
         // Fallback: assume text files for common extensions
-        const textExtensions = ['.txt', '.js', '.json', '.html', '.css', '.md', '.log'];
-        const ext = filename.split('.').pop().toLowerCase();
+        const textExtensions = [".txt", ".js", ".json", ".html", ".css", ".md", ".log"];
+        const ext = filename.split(".").pop().toLowerCase();
         return {
             name: filename,
             size: 0, // Will be updated when we get the response
-            isBinary: !textExtensions.includes('.' + ext),
+            isBinary: !textExtensions.includes("." + ext),
             isMedia: this.isMediaFile(filename)
         };
     }
 
     calculatePageSize(isBinary) {
-        const popup = document.getElementById('file-viewer-popup');
+        const popup = document.getElementById("file-viewer-popup");
         if (!popup) return 8192; // Default fallback
 
         // Get the specific content area for calculating size
         const contentArea = isBinary
-            ? document.getElementById('binary-content')
-            : document.getElementById('text-content');
+            ? document.getElementById("binary-content")
+            : document.getElementById("text-content");
 
         if (!contentArea) return 8192; // Fallback if content areas not found
 
@@ -740,13 +750,13 @@ class SciFiTerminal {
         }
 
         // Get font metrics
-        const testElement = document.createElement('span');
-        testElement.style.fontFamily = 'Courier New, Monaco, Menlo, monospace';
-        testElement.style.fontSize = '12px'; // Match CSS font size
-        testElement.style.fontWeight = 'normal';
-        testElement.style.visibility = 'hidden';
-        testElement.style.position = 'absolute';
-        testElement.textContent = 'W'; // Use 'W' for width measurement
+        const testElement = document.createElement("span");
+        testElement.style.fontFamily = "Courier New, Monaco, Menlo, monospace";
+        testElement.style.fontSize = "12px"; // Match CSS font size
+        testElement.style.fontWeight = "normal";
+        testElement.style.visibility = "hidden";
+        testElement.style.position = "absolute";
+        testElement.textContent = "W"; // Use "W" for width measurement
         document.body.appendChild(testElement);
 
         const charWidth = testElement.offsetWidth;
@@ -767,7 +777,7 @@ class SciFiTerminal {
             // A byte takes up 2 hex chars + 1 space = 3 chars in total for hex representation.
             // Plus an additional space for grouping every X bytes (e.g., 4 bytes)
             // The ASCII part also consumes space
-            // Let's simplify and consider typical hex viewer layout:
+            // Let"s simplify and consider typical hex viewer layout:
             // "00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F   . . . . . . . . . . . . . . . ."
             // A common width for a line in hex viewers is 16 bytes.
             // So, calculate based on 16 bytes per line.
@@ -780,14 +790,14 @@ class SciFiTerminal {
     }
 
     isMediaFile(filename) {
-        const ext = '.' + filename.split('.').pop().toLowerCase();
+        const ext = "." + filename.split(".").pop().toLowerCase();
         return Object.values(this.mediaExtensions).some(extensions => 
             extensions.includes(ext)
         );
     }
 
     getMediaType(filename) {
-        const ext = '.' + filename.split('.').pop().toLowerCase();
+        const ext = "." + filename.split(".").pop().toLowerCase();
         for (const [type, extensions] of Object.entries(this.mediaExtensions)) {
             if (extensions.includes(ext)) {
                 return type;
@@ -798,12 +808,12 @@ class SciFiTerminal {
 
     // New unified showFileViewer
     showFileViewer(filename, mode, size) {
-        const popup = document.getElementById('file-viewer-popup');
-        const filenameElement = document.getElementById('popup-filename');
-        const loadingContent = document.getElementById('loading-content');
-        const textContent = document.getElementById('text-content');
-        const binaryContent = document.getElementById('binary-content');
-        const playButton = document.getElementById('play-button');
+        const popup = document.getElementById("file-viewer-popup");
+        const filenameElement = document.getElementById("popup-filename");
+        const loadingContent = document.getElementById("loading-content");
+        const textContent = document.getElementById("text-content");
+        const binaryContent = document.getElementById("binary-content");
+        const playButton = document.getElementById("play-button");
 
         // Update filename and size
         filenameElement.textContent = `${filename} (${this.formatFileSize(size)})`;
@@ -814,33 +824,33 @@ class SciFiTerminal {
 
         // Show/hide play button based on media type
         if (playButton) {
-            if (isMedia && mode === 'binary') {
-                playButton.style.display = 'flex';
+            if (isMedia && mode === "binary") {
+                playButton.style.display = "flex";
                 playButton.disabled = true; // Disable until all content is loaded
-                playButton.innerHTML = '<span>Loading media...</span>';
+                playButton.innerHTML = "<span>Loading media...</span>";
             } else {
-                playButton.style.display = 'none';
+                playButton.style.display = "none";
             }
         }
 
         // Hide all content types initially
-        loadingContent.classList.add('hidden');
-        textContent.classList.add('hidden');
-        binaryContent.classList.add('hidden');
+        loadingContent.classList.add("hidden");
+        textContent.classList.add("hidden");
+        binaryContent.classList.add("hidden");
 
-        if (mode === 'loading') {
+        if (mode === "loading") {
             // Show loading spinner
-            loadingContent.classList.remove('hidden');
+            loadingContent.classList.remove("hidden");
             // Clear previous content from actual display areas to avoid flicker
-            document.getElementById('text-display').textContent = '';
-            document.getElementById('hex-data').innerHTML = '';
-            document.getElementById('ascii-data').innerHTML = '';
-        } else if (mode === 'text') {
+            document.getElementById("text-display").textContent = "";
+            document.getElementById("hex-data").innerHTML = "";
+            document.getElementById("ascii-data").innerHTML = "";
+        } else if (mode === "text") {
             // Only show the container; content is filled by displayChunkedTextContent
-            textContent.classList.remove('hidden');
-        } else if (mode === 'binary') {
+            textContent.classList.remove("hidden");
+        } else if (mode === "binary") {
             // Only show the container; content is filled by displayChunkedBinaryContent
-            binaryContent.classList.remove('hidden');
+            binaryContent.classList.remove("hidden");
             
             // If this is a media file and we have all content loaded, enable play button
             if (isMedia && this.currentFileInfo && this.currentFileInfo.eof) {
@@ -849,52 +859,52 @@ class SciFiTerminal {
         }
 
         // Show popup
-        popup.classList.remove('hidden');
+        popup.classList.remove("hidden");
 
         // Play sound effect (only once when popup appears)
-        if (mode === 'loading') {
-            this.playSoundRestart('sfx/appear.wav');
+        if (mode === "loading") {
+            this.playSoundRestart("sfx/appear.wav");
         }
     }
 
     // Legacy handler for single content messages (keep for backward compatibility if needed)
     showFileViewerLegacy(filename, mode, content, size) {
-        const popup = document.getElementById('file-viewer-popup');
-        const filenameElement = document.getElementById('popup-filename');
-        const loadingContent = document.getElementById('loading-content');
-        const textContent = document.getElementById('text-content');
-        const binaryContent = document.getElementById('binary-content');
-        const textDisplay = document.getElementById('text-display');
-        const hexData = document.getElementById('hex-data');
-        const asciiData = document.getElementById('ascii-data');
+        const popup = document.getElementById("file-viewer-popup");
+        const filenameElement = document.getElementById("popup-filename");
+        const loadingContent = document.getElementById("loading-content");
+        const textContent = document.getElementById("text-content");
+        const binaryContent = document.getElementById("binary-content");
+        const textDisplay = document.getElementById("text-display");
+        const hexData = document.getElementById("hex-data");
+        const asciiData = document.getElementById("ascii-data");
 
         filenameElement.textContent = `${filename} (${this.formatFileSize(size)})`;
 
-        loadingContent.classList.add('hidden');
-        textContent.classList.add('hidden');
-        binaryContent.classList.add('hidden');
+        loadingContent.classList.add("hidden");
+        textContent.classList.add("hidden");
+        binaryContent.classList.add("hidden");
 
-        if (mode === 'loading') {
-            loadingContent.classList.remove('hidden');
-        } else if (mode === 'text') {
+        if (mode === "loading") {
+            loadingContent.classList.remove("hidden");
+        } else if (mode === "text") {
             textDisplay.textContent = content;
-            textContent.classList.remove('hidden');
-        } else if (mode === 'binary') {
+            textContent.classList.remove("hidden");
+        } else if (mode === "binary") {
             this.displayHexViewer(content, hexData, asciiData);
-            binaryContent.classList.remove('hidden');
+            binaryContent.classList.remove("hidden");
         }
 
-        popup.classList.remove('hidden');
-        this.playSoundRestart('sfx/appear.wav');
+        popup.classList.remove("hidden");
+        this.playSoundRestart("sfx/appear.wav");
     }
 
     displayHexViewer(hexContent, hexElement, asciiElement) {
         // Clear previous content
-        hexElement.innerHTML = '';
-        asciiElement.innerHTML = '';
+        hexElement.innerHTML = "";
+        asciiElement.innerHTML = "";
 
         // Split hex content into bytes
-        const hexBytes = hexContent.split(' ').filter(Boolean); // Filter out empty strings
+        const hexBytes = hexContent.split(" ").filter(Boolean); // Filter out empty strings
         const bytesPerLine = 16; // Standard hex viewer line length
 
         for (
@@ -906,18 +916,18 @@ class SciFiTerminal {
             const lineEnd = Math.min(lineStart + bytesPerLine, hexBytes.length);
 
             // Create hex line
-            const hexLine = document.createElement('div');
-            hexLine.className = 'hex-line';
-            hexLine.style.display = 'flex';
-            hexLine.style.flexWrap = 'nowrap'; // Prevent wrapping within a line
-            hexLine.style.whiteSpace = 'pre'; // Preserve spaces
+            const hexLine = document.createElement("div");
+            hexLine.className = "hex-line";
+            hexLine.style.display = "flex";
+            hexLine.style.flexWrap = "nowrap"; // Prevent wrapping within a line
+            hexLine.style.whiteSpace = "pre"; // Preserve spaces
 
             // Create ASCII line
-            const asciiLine = document.createElement('div');
-            asciiLine.className = 'ascii-line';
-            asciiLine.style.display = 'flex';
-            asciiLine.style.flexWrap = 'nowrap';
-            asciiLine.style.whiteSpace = 'pre';
+            const asciiLine = document.createElement("div");
+            asciiLine.className = "ascii-line";
+            asciiLine.style.display = "flex";
+            asciiLine.style.flexWrap = "nowrap";
+            asciiLine.style.whiteSpace = "pre";
 
             // Process bytes in this line
             for (let i = lineStart; i < lineEnd; i++) {
@@ -925,16 +935,16 @@ class SciFiTerminal {
                 const byte = parseInt(hex, 16);
 
                 // Create hex byte element
-                const hexByte = document.createElement('span');
-                hexByte.className = 'hex-byte';
-                hexByte.textContent = hex.padStart(2, '0'); // Ensure 2 chars
+                const hexByte = document.createElement("span");
+                hexByte.className = "hex-byte";
+                hexByte.textContent = hex.padStart(2, "0"); // Ensure 2 chars
                 hexByte.dataset.byteIndex = i;
                 hexByte.dataset.lineIndex = lineIndex;
                 hexByte.dataset.positionInLine = i - lineStart;
 
                 // Create ASCII character element
-                const asciiChar = document.createElement('span');
-                asciiChar.className = 'ascii-char';
+                const asciiChar = document.createElement("span");
+                asciiChar.className = "ascii-char";
                 asciiChar.dataset.byteIndex = i;
                 asciiChar.dataset.lineIndex = lineIndex;
                 asciiChar.dataset.positionInLine = i - lineStart;
@@ -945,14 +955,14 @@ class SciFiTerminal {
                     asciiChar.textContent = String.fromCharCode(byte);
                 } else {
                     // Non-printable, use dot or specific symbols
-                    asciiChar.textContent = '.';
+                    asciiChar.textContent = ".";
                 }
 
                 // Add click event for highlighting
-                hexByte.addEventListener('click', () =>
+                hexByte.addEventListener("click", () =>
                     this.highlightBytePair(i, lineIndex, i - lineStart)
                 );
-                asciiChar.addEventListener('click', () =>
+                asciiChar.addEventListener("click", () =>
                     this.highlightBytePair(i, lineIndex, i - lineStart)
                 );
 
@@ -960,8 +970,8 @@ class SciFiTerminal {
                 hexLine.appendChild(hexByte);
                 // Add a space after each byte in hex view for readability
                 if ((i - lineStart + 1) % 1 === 0 && i !== lineEnd - 1) {
-                    const space = document.createElement('span');
-                    space.textContent = ' ';
+                    const space = document.createElement("span");
+                    space.textContent = " ";
                     hexLine.appendChild(space);
                 }
 
@@ -970,18 +980,18 @@ class SciFiTerminal {
 
             // Fill empty spaces if line is shorter than bytesPerLine
             for (let i = lineEnd; i < lineStart + bytesPerLine; i++) {
-                const hexByte = document.createElement('span');
-                hexByte.className = 'hex-byte empty';
-                hexByte.textContent = '  '; // Two spaces for alignment
+                const hexByte = document.createElement("span");
+                hexByte.className = "hex-byte empty";
+                hexByte.textContent = "  "; // Two spaces for alignment
                 hexLine.appendChild(hexByte);
                 if ((i - lineStart + 1) % 1 === 0) {
-                    const space = document.createElement('span');
-                    space.textContent = ' ';
+                    const space = document.createElement("span");
+                    space.textContent = " ";
                     hexLine.appendChild(space);
                 }
-                const asciiChar = document.createElement('span');
-                asciiChar.className = 'ascii-char empty';
-                asciiChar.textContent = ' ';
+                const asciiChar = document.createElement("span");
+                asciiChar.className = "ascii-char empty";
+                asciiChar.textContent = " ";
                 asciiLine.appendChild(asciiChar);
             }
 
@@ -1007,8 +1017,8 @@ class SciFiTerminal {
 
         if (hexByte && asciiChar) {
             // Add selected class to both elements
-            hexByte.classList.add('selected');
-            asciiChar.classList.add('selected');
+            hexByte.classList.add("selected");
+            asciiChar.classList.add("selected");
 
             // Create selection highlight box
             this.createSelectionHighlight(hexByte, asciiChar);
@@ -1017,16 +1027,16 @@ class SciFiTerminal {
 
     clearAllHighlights() {
         // Remove selected class from all elements
-        const selectedHex = this.hexElement.querySelectorAll('.hex-byte.selected');
+        const selectedHex = this.hexElement.querySelectorAll(".hex-byte.selected");
         const selectedAscii = this.asciiElement.querySelectorAll(
-            '.ascii-char.selected'
+            ".ascii-char.selected"
         );
 
-        selectedHex.forEach((el) => el.classList.remove('selected'));
-        selectedAscii.forEach((el) => el.classList.remove('selected'));
+        selectedHex.forEach((el) => el.classList.remove("selected"));
+        selectedAscii.forEach((el) => el.classList.remove("selected"));
 
         // Remove any existing selection highlights
-        const highlights = document.querySelectorAll('.selection-highlight');
+        const highlights = document.querySelectorAll(".selection-highlight");
         highlights.forEach((el) => el.remove());
     }
 
@@ -1035,12 +1045,12 @@ class SciFiTerminal {
         const hexRect = hexByte.getBoundingClientRect();
         const asciiRect = asciiChar.getBoundingClientRect();
         const popupRect = document
-            .getElementById('file-viewer-popup')
+            .getElementById("file-viewer-popup")
             .getBoundingClientRect();
 
         // Create highlight element
-        const highlight = document.createElement('div');
-        highlight.className = 'selection-highlight';
+        const highlight = document.createElement("div");
+        highlight.className = "selection-highlight";
 
         // Position highlight to cover both elements
         const left = Math.min(hexRect.left, asciiRect.left) - popupRect.left;
@@ -1055,7 +1065,7 @@ class SciFiTerminal {
         highlight.style.height = `${height}px`;
 
         // Add to popup
-        document.getElementById('file-viewer-popup').appendChild(highlight);
+        document.getElementById("file-viewer-popup").appendChild(highlight);
 
         // Auto-remove highlight after a delay
         setTimeout(() => {
@@ -1067,7 +1077,7 @@ class SciFiTerminal {
 
     handleChunkedFileContent(message) {
         try {
-            console.log('Handling chunked file content for:', message.filename);
+            console.log("Handling chunked file content for:", message.filename);
 
             // Update current file info
             this.currentFileInfo.filename = message.filename;
@@ -1081,27 +1091,27 @@ class SciFiTerminal {
                 this.currentFileInfo.mode !== message.mode
             ) {
                 this.currentFileInfo.mode = message.mode;
-                console.log('Set mode to:', message.mode);
+                console.log("Set mode to:", message.mode);
             }
-            // Recalculate pageSize here to ensure it's accurate based on current view/popup size
+            // Recalculate pageSize here to ensure it"s accurate based on current view/popup size
             // This is crucial if the window was resized while the viewer was open.
             const newCalculatedPageSize = this.calculatePageSize(
-                message.mode === 'binary'
+                message.mode === "binary"
             );
             if (
                 !this.currentFileInfo.pageSize ||
                 this.currentFileInfo.pageSize !== newCalculatedPageSize
             ) {
                 this.currentFileInfo.pageSize = newCalculatedPageSize;
-                console.log('Set/Updated page size to:', this.currentFileInfo.pageSize);
+                console.log("Set/Updated page size to:", this.currentFileInfo.pageSize);
             }
 
             // Store loaded pages
             if (message.pages) {
-                console.log('Storing', message.pages.length, 'pages');
+                console.log("Storing", message.pages.length, "pages");
                 message.pages.forEach((page) => {
                     this.currentFileInfo.loadedPages.set(page.page, page);
-                    console.log('Stored page', page.page, 'with offset', page.offset);
+                    console.log("Stored page", page.page, "with offset", page.offset);
                 });
             }
 
@@ -1113,11 +1123,11 @@ class SciFiTerminal {
             ); // Call the unified viewer
 
             // Then, display content based on mode
-            if (message.mode === 'text') {
-                console.log('Displaying text content');
+            if (message.mode === "text") {
+                console.log("Displaying text content");
                 this.displayChunkedTextContent(); // No message needed, it reads from currentFileInfo
-            } else if (message.mode === 'binary') {
-                console.log('Displaying binary content');
+            } else if (message.mode === "binary") {
+                console.log("Displaying binary content");
                 this.displayChunkedBinaryContent(); // No message needed
                 
                 // Check if this is a media file and all content is loaded
@@ -1127,19 +1137,19 @@ class SciFiTerminal {
                 }
             }
         } catch (error) {
-            console.error('Error in handleChunkedFileContent:', error);
-            console.error('Message:', message);
-            console.error('Current file info:', this.currentFileInfo);
+            console.error("Error in handleChunkedFileContent:", error);
+            console.error("Message:", message);
+            console.error("Current file info:", this.currentFileInfo);
         }
     }
 
     displayChunkedTextContent() {
         if (!this.currentFileInfo || !this.currentFileInfo.loadedPages) {
-            console.error('currentFileInfo not properly initialized for text content');
+            console.error("currentFileInfo not properly initialized for text content");
             return;
         }
 
-        let fullContent = '';
+        let fullContent = "";
 
         // Combine all loaded pages
         const sortedPages = Array.from(this.currentFileInfo.loadedPages.values())
@@ -1149,30 +1159,30 @@ class SciFiTerminal {
             fullContent += page.text;
         });
 
-        const textDisplayElement = document.getElementById('text-display');
+        const textDisplayElement = document.getElementById("text-display");
         if (textDisplayElement) {
             textDisplayElement.textContent = fullContent;
-            console.log('Text content updated:', fullContent.substring(0, 100) + '...'); // Log a preview
-            // Ensure the parent container is visible if it wasn't already (though showFileViewer should handle this)
-            document.getElementById('text-content').classList.remove('hidden');
+            console.log("Text content updated:", fullContent.substring(0, 100) + "..."); // Log a preview
+            // Ensure the parent container is visible if it wasn"t already (though showFileViewer should handle this)
+            document.getElementById("text-content").classList.remove("hidden");
         } else {
-            console.error('text-display element not found!');
+            console.error("text-display element not found!");
         }
     }
 
     displayChunkedBinaryContent() {
         if (!this.currentFileInfo || !this.currentFileInfo.loadedPages) {
             console.error(
-                'currentFileInfo not properly initialized for binary content'
+                "currentFileInfo not properly initialized for binary content"
             );
             return;
         }
 
-        const hexData = document.getElementById('hex-data');
-        const asciiData = document.getElementById('ascii-data');
+        const hexData = document.getElementById("hex-data");
+        const asciiData = document.getElementById("ascii-data");
 
         if (!hexData || !asciiData) {
-            console.error('Hex or ASCII data elements not found!');
+            console.error("Hex or ASCII data elements not found!");
             return;
         }
 
@@ -1180,31 +1190,31 @@ class SciFiTerminal {
         const sortedPages = Array.from(this.currentFileInfo.loadedPages.values())
             .sort((a, b) => a.page - b.page);
 
-        let fullHexContent = '';
+        let fullHexContent = "";
         sortedPages.forEach((page) => {
             // Ensure spaces between hex values when combining
-            fullHexContent += page.text + ' ';
+            fullHexContent += page.text + " ";
         });
 
         // Ensure the parent container is visible
-        document.getElementById('binary-content').classList.remove('hidden');
+        document.getElementById("binary-content").classList.remove("hidden");
 
         // Pass the trim()med content to displayHexViewer
         this.displayHexViewer(fullHexContent.trim(), hexData, asciiData);
     }
 
     enablePlayButton(filename, mediaType) {
-        const playButton = document.getElementById('play-button');
+        const playButton = document.getElementById("play-button");
         if (playButton && this.isMediaFile(filename)) {
             playButton.disabled = false;
-            playButton.innerHTML = '<span>▶ Play</span>';
+            playButton.innerHTML = "<span>▶ Play</span>";
             
             // Remove any existing event listeners
             const newButton = playButton.cloneNode(true);
             playButton.parentNode.replaceChild(newButton, playButton);
             
             // Add click handler
-            newButton.addEventListener('click', () => {
+            newButton.addEventListener("click", () => {
                 this.playMediaFile(filename, mediaType);
             });
         }
@@ -1212,46 +1222,46 @@ class SciFiTerminal {
 
     playMediaFile(filename, mediaType) {
         try {
-            console.log('Playing media file:', filename, 'type:', mediaType);
+            console.log("Playing media file:", filename, "type:", mediaType);
             
             // Get all hex content from loaded pages
             const sortedPages = Array.from(this.currentFileInfo.loadedPages.values())
                 .sort((a, b) => a.page - b.page);
             
-            let fullHexContent = '';
+            let fullHexContent = "";
             sortedPages.forEach((page) => {
-                fullHexContent += page.text.replace(/\s/g, ''); // Remove spaces
+                fullHexContent += page.text.replace(/\s/g, ""); // Remove spaces
             });
             
             // Convert hex to binary
             const binaryData = this.hexToUint8Array(fullHexContent);
             
             // Determine MIME type
-            const ext = '.' + filename.split('.').pop().toLowerCase();
+            const ext = "." + filename.split(".").pop().toLowerCase();
             const mimeTypes = {
-                '.jpg': 'image/jpeg',
-                '.jpeg': 'image/jpeg',
-                '.png': 'image/png',
-                '.gif': 'image/gif',
-                '.bmp': 'image/bmp',
-                '.webp': 'image/webp',
-                '.svg': 'image/svg+xml',
-                '.mp3': 'audio/mpeg',
-                '.wav': 'audio/wav',
-                '.ogg': 'audio/ogg',
-                '.m4a': 'audio/mp4',
-                '.aac': 'audio/aac',
-                '.flac': 'audio/flac',
-                '.mp4': 'video/mp4',
-                '.webm': 'video/webm',
-                '.avi': 'video/avi',
-                '.mov': 'video/quicktime',
-                '.mkv': 'video/x-matroska',
-                '.wmv': 'video/x-ms-wmv',
-                '.flv': 'video/x-flv'
+                ".jpg": "image/jpeg",
+                ".jpeg": "image/jpeg",
+                ".png": "image/png",
+                ".gif": "image/gif",
+                ".bmp": "image/bmp",
+                ".webp": "image/webp",
+                ".svg": "image/svg+xml",
+                ".mp3": "audio/mpeg",
+                ".wav": "audio/wav",
+                ".ogg": "audio/ogg",
+                ".m4a": "audio/mp4",
+                ".aac": "audio/aac",
+                ".flac": "audio/flac",
+                ".mp4": "video/mp4",
+                ".webm": "video/webm",
+                ".avi": "video/avi",
+                ".mov": "video/quicktime",
+                ".mkv": "video/x-matroska",
+                ".wmv": "video/x-ms-wmv",
+                ".flv": "video/x-flv"
             };
             
-            const mimeType = mimeTypes[ext] || 'application/octet-stream';
+            const mimeType = mimeTypes[ext] || "application/octet-stream";
             
             // Create blob and object URL
             const blob = new Blob([binaryData], { type: mimeType });
@@ -1261,16 +1271,16 @@ class SciFiTerminal {
             this.showMediaPlayer(filename, mediaType, objectUrl, mimeType);
             
         } catch (error) {
-            console.error('Error playing media file:', error);
-            alert('Error playing media file: ' + error.message);
+            console.error("Error playing media file:", error);
+            alert("Error playing media file: " + error.message);
         }
     }
 
     hexToUint8Array(hexString) {
         // Remove any whitespace and ensure even length
-        const cleanHex = hexString.replace(/\s/g, '');
+        const cleanHex = hexString.replace(/\s/g, "");
         if (cleanHex.length % 2 !== 0) {
-            throw new Error('Invalid hex string length');
+            throw new Error("Invalid hex string length");
         }
         
         const bytes = new Uint8Array(cleanHex.length / 2);
@@ -1282,8 +1292,8 @@ class SciFiTerminal {
 
     showMediaPlayer(filename, mediaType, objectUrl, mimeType) {
         // Create media player overlay
-        const overlay = document.createElement('div');
-        overlay.className = 'media-player-overlay';
+        const overlay = document.createElement("div");
+        overlay.className = "media-player-overlay";
         overlay.innerHTML = `
             <div class="media-player-container">
                 <div class="media-player-header">
@@ -1300,14 +1310,14 @@ class SciFiTerminal {
         document.body.appendChild(overlay);
         
         // Add event listeners
-        const closeButton = overlay.querySelector('.media-player-close');
-        closeButton.addEventListener('click', () => {
+        const closeButton = overlay.querySelector(".media-player-close");
+        closeButton.addEventListener("click", () => {
             URL.revokeObjectURL(objectUrl);
             overlay.remove();
         });
         
         // Close on overlay click (but not on media element)
-        overlay.addEventListener('click', (e) => {
+        overlay.addEventListener("click", (e) => {
             if (e.target === overlay) {
                 URL.revokeObjectURL(objectUrl);
                 overlay.remove();
@@ -1316,28 +1326,28 @@ class SciFiTerminal {
         
         // Close on escape key
         const escapeHandler = (e) => {
-            if (e.key === 'Escape') {
+            if (e.key === "Escape") {
                 URL.revokeObjectURL(objectUrl);
                 overlay.remove();
-                document.removeEventListener('keydown', escapeHandler);
+                document.removeEventListener("keydown", escapeHandler);
             }
         };
-        document.addEventListener('keydown', escapeHandler);
+        document.addEventListener("keydown", escapeHandler);
         
         // Play sound effect
-        this.playSoundRestart('sfx/appear.wav');
+        this.playSoundRestart("sfx/appear.wav");
     }
 
     createMediaElement(mediaType, objectUrl, mimeType) {
         switch (mediaType) {
-            case 'image':
+            case "image":
                 return `<img src="${objectUrl}" alt="Media content" class="media-image">`;
-            case 'audio':
+            case "audio":
                 return `<audio controls class="media-audio" preload="metadata">
                     <source src="${objectUrl}" type="${mimeType}">
                     Your browser does not support the audio element.
                 </audio>`;
-            case 'video':
+            case "video":
                 return `<video controls class="media-video" preload="metadata">
                     <source src="${objectUrl}" type="${mimeType}">
                     Your browser does not support the video element.
@@ -1357,8 +1367,8 @@ class SciFiTerminal {
 
         this.websocket.send(
             JSON.stringify({
-                type: 'file_system',
-                action: 'get_file_chunk',
+                type: "file_system",
+                action: "get_file_chunk",
                 filepath: this.currentFileInfo.filename,
                 mode: this.currentFileInfo.mode,
                 pagesize: this.currentFileInfo.pageSize,
@@ -1377,9 +1387,9 @@ class SciFiTerminal {
     }
 
     closeFileViewer() {
-        const popup = document.getElementById('file-viewer-popup');
+        const popup = document.getElementById("file-viewer-popup");
         if (popup) {
-            popup.classList.add('hidden');
+            popup.classList.add("hidden");
 
             // Clear current file info
             this.currentFileInfo = {
@@ -1393,96 +1403,96 @@ class SciFiTerminal {
             };
 
             // Play sound effect
-            this.playSoundRestart('sfx/appear.wav');
+            this.playSoundRestart("sfx/appear.wav");
         }
     }
 
-    populateFileExplorer(contents = [], currentPath = '') {
-        const explorerContent = document.getElementById('explorer-content');
-        console.log('Populating file explorer with:', contents);
+    populateFileExplorer(contents = [], currentPath = "") {
+        const explorerContent = document.getElementById("explorer-content");
+        console.log("Populating file explorer with:", contents);
 
         // Store current directory contents for file info lookup
         this.currentDirectoryContents = contents;
 
         // Clear existing content
-        explorerContent.innerHTML = '';
+        explorerContent.innerHTML = "";
 
         // Add ".." entry at the top if not at root
-        if (currentPath && currentPath !== '/') {
-            const parentItem = document.createElement('div');
-            parentItem.className = 'folder-item parent-item';
+        if (currentPath && currentPath !== "/") {
+            const parentItem = document.createElement("div");
+            parentItem.className = "folder-item parent-item";
 
             if (this.isGridView) {
                 parentItem.innerHTML = `
-                    <img src="assets/fxfolder.svg" alt="parent" class="folder-icon" onerror="this.style.display='none'">
+                    <img src="assets/fxfolder.svg" alt="parent" class="folder-icon" onerror="this.style.display="none"">
                     <span class="file-name">..</span>
                 `;
             } else {
                 parentItem.innerHTML = `
-                    <img src="assets/fxfolder.svg" alt="parent" class="folder-icon" onerror="this.style.display='none'">
+                    <img src="assets/fxfolder.svg" alt="parent" class="folder-icon" onerror="this.style.display="none"">
                     <span class="file-name">..</span>
                 `;
             }
 
-            parentItem.addEventListener('click', () => this.changeDirectory('..'));
-            parentItem.classList.add('text-appear');
+            parentItem.addEventListener("click", () => this.changeDirectory(".."));
+            parentItem.classList.add("text-appear");
             explorerContent.appendChild(parentItem);
-            this.playSound('sfx/panels.wav');
+            this.playSound("sfx/panels.wav");
         }
 
         // Add file and folder items
         contents.forEach((item, index) => {
             setTimeout(() => {
-                const itemElement = document.createElement('div');
+                const itemElement = document.createElement("div");
                 itemElement.className =
-                    item.type === 'folder' ? 'folder-item' : 'file-item';
+                    item.type === "folder" ? "folder-item" : "file-item";
 
                 const iconSrc =
-                    item.type === 'folder'
-                        ? 'assets/fxfolder.svg'
-                        : 'assets/fxfile.svg';
+                    item.type === "folder"
+                        ? "assets/fxfolder.svg"
+                        : "assets/fxfile.svg";
 
                 // Create different HTML for list vs grid view
                 if (this.isGridView) {
                     itemElement.innerHTML = `
-                        <img src="${iconSrc}" alt="${item.type}" class="${item.type === 'folder' ? 'folder-icon' : 'file-icon'}" onerror="this.style.display='none'">
+                        <img src="${iconSrc}" alt="${item.type}" class="${item.type === "folder" ? "folder-icon" : "file-icon"}" onerror="this.style.display="none"">
                         <span class="file-name">${item.name}</span>
-                        ${item.type === 'file' ? `<span class="file-info">${item.size}KB</span>` : ''}
+                        ${item.type === "file" ? `<span class="file-info">${item.size}KB</span>` : ""}
                     `;
                 } else {
                     itemElement.innerHTML = `
-                        <img src="${iconSrc}" alt="${item.type}" class="${item.type === 'folder' ? 'folder-icon' : 'file-icon'}" onerror="this.style.display='none'">
+                        <img src="${iconSrc}" alt="${item.type}" class="${item.type === "folder" ? "folder-icon" : "file-icon"}" onerror="this.style.display="none"">
                         <span class="file-name">${item.name}</span>
-                        <span class="file-info">${item.type === 'folder' ? '' : `${item.size}KB`}</span>
+                        <span class="file-info">${item.type === "folder" ? "" : `${item.size}KB`}</span>
                     `;
                 }
 
                 // Add click handler for folders
-                if (item.type === 'folder') {
-                    itemElement.addEventListener('click', () =>
+                if (item.type === "folder") {
+                    itemElement.addEventListener("click", () =>
                         this.changeDirectory(item.name)
                     );
                 } else {
                     // Add double-click handler for files
-                    itemElement.addEventListener('dblclick', () =>
+                    itemElement.addEventListener("dblclick", () =>
                         this.openFile(item.name)
                     );
                 }
 
-                itemElement.classList.add('text-appear');
+                itemElement.classList.add("text-appear");
                 explorerContent.appendChild(itemElement);
-                this.playSoundRestart('sfx/panels.wav');
+                this.playSoundRestart("sfx/panels.wav");
             }, index * 150);
         });
     }
 
     changeDirectory(path) {
         if (this.isConnected && this.websocket.readyState === WebSocket.OPEN) {
-            console.log('Changing directory to:', path);
+            console.log("Changing directory to:", path);
             this.websocket.send(
                 JSON.stringify({
-                    type: 'file_system',
-                    action: 'change_directory',
+                    type: "file_system",
+                    action: "change_directory",
                     path: path
                 })
             );
@@ -1490,37 +1500,37 @@ class SciFiTerminal {
     }
 
     setupFileExplorerControls() {
-        const pathInput = document.getElementById('path-input');
-        const viewToggle = document.getElementById('view-toggle');
+        const pathInput = document.getElementById("path-input");
+        const viewToggle = document.getElementById("view-toggle");
 
         // Path input handler
-        pathInput.addEventListener('keypress', (event) => {
-            if (event.key === 'Enter') {
+        pathInput.addEventListener("keypress", (event) => {
+            if (event.key === "Enter") {
                 const path = pathInput.value.trim();
                 if (path) {
                     this.navigateToPath(path);
-                    pathInput.value = '';
+                    pathInput.value = "";
                 }
             }
         });
 
-        pathInput.addEventListener('keydown', (_) => {
-            this.playSound('sfx/stdin.wav');
+        pathInput.addEventListener("keydown", (_) => {
+            this.playSound("sfx/stdin.wav");
         });
 
         // View toggle handler
-        viewToggle.addEventListener('click', () => {
+        viewToggle.addEventListener("click", () => {
             this.toggleView();
         });
     }
 
     navigateToPath(path) {
         if (this.isConnected && this.websocket.readyState === WebSocket.OPEN) {
-            console.log('Navigating to path:', path);
+            console.log("Navigating to path:", path);
             this.websocket.send(
                 JSON.stringify({
-                    type: 'file_system',
-                    action: 'change_directory',
+                    type: "file_system",
+                    action: "change_directory",
                     path: path
                 })
             );
@@ -1529,16 +1539,16 @@ class SciFiTerminal {
 
     toggleView() {
         this.isGridView = !this.isGridView;
-        const explorerContent = document.getElementById('explorer-content');
+        const explorerContent = document.getElementById("explorer-content");
 
         if (this.isGridView) {
-            explorerContent.classList.add('grid-view');
+            explorerContent.classList.add("grid-view");
         } else {
-            explorerContent.classList.remove('grid-view');
+            explorerContent.classList.remove("grid-view");
         }
 
         // Play sound effect
-        this.playSoundRestart('sfx/appear.wav');
+        this.playSoundRestart("sfx/appear.wav");
 
         // Re-render current content with new view
         this.refreshCurrentView();
@@ -1550,12 +1560,12 @@ class SciFiTerminal {
     }
 
     updatePathInput(currentPath) {
-        const pathInput = document.getElementById('path-input');
+        const pathInput = document.getElementById("path-input");
         if (pathInput) {
             // Set the current path in the input field
             // Ensure we preserve the tilde if it exists
-            pathInput.value = currentPath || '';
-            console.log('Updated path input to:', currentPath);
+            pathInput.value = currentPath || "";
+            console.log("Updated path input to:", currentPath);
         }
     }
 
@@ -1574,7 +1584,7 @@ class SciFiTerminal {
 }
 
 // Initialize terminal when page loads
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
     const sciFiTerminal = new SciFiTerminal();
 
     // Make terminal globally accessible for debugging
@@ -1582,7 +1592,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Handle page visibility changes
-document.addEventListener('visibilitychange', () => {
+document.addEventListener("visibilitychange", () => {
     if (
         !document.hidden &&
         window.sciFiTerminal &&
@@ -1593,7 +1603,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // Handle fullscreen changes
-document.addEventListener('fullscreenchange', () => {
+document.addEventListener("fullscreenchange", () => {
     setTimeout(() => {
         if (window.sciFiTerminal && window.sciFiTerminal.fitAddon) {
             window.sciFiTerminal.fitAddon.fit();
