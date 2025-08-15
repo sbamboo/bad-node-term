@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS Terminal</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css">
+</head>
+<body>
+    <!-- Startup Screen -->
+    <div id="startup-screen" class="startup-screen">
+        <button id="enter-btn" class="enter-button">ENTER</button>
+    </div>
+
+    <!-- Main Interface (hidden initially) -->
+    <div id="main-interface" class="main-interface hidden">
+        <!-- Terminal Container -->
+        <div id="terminal-container" class="terminal-container">
+            <div class="terminal-header">
+                <div class="header-left">
+                    <span class="terminal-title">NEXUS_TERMINAL</span>
+                </div>
+                <div class="header-right">
+                    <span id="connection-status" class="status-indicator">ONLINE</span>
+                </div>
+            </div>
+            <div id="terminal" class="terminal"></div>
+        </div>
+
+        <!-- Info Panel -->
+        <div id="info-panel" class="info-panel hidden">
+            <div class="panel-header">
+                <span class="panel-title">INFX</span>
+            </div>
+            <div class="panel-content">
+                <div class="info-section">
+                    <div class="info-label">NEXUS</div>
+                    <div class="info-value" id="nexus-version">v1.0.0</div>
+                </div>
+                <div class="info-section">
+                    <div class="info-label">NODE</div>
+                    <div class="info-value" id="node-version">v18.0.0</div>
+                </div>
+                <div class="info-section">
+                    <div class="info-label">OS</div>
+                    <div class="info-value" id="host-os">Linux</div>
+                </div>
+                <div class="info-section">
+                    <div class="info-label">PLATFORM</div>
+                    <div class="info-value" id="host-platform">linux</div>
+                </div>
+                <div class="info-section">
+                    <div class="info-label">HOSTNAME</div>
+                    <div class="info-value" id="hostname">localhost</div>
+                </div>
+                <div class="info-section">
+                    <div class="info-label">CPU</div>
+                    <div class="info-value" id="cpu-model">Intel i7</div>
+                </div>
+                <div class="info-section">
+                    <div class="info-label">CORES</div>
+                    <div class="info-value" id="cpu-cores">8</div>
+                </div>
+                <div class="info-section">
+                    <div class="info-label">GPU</div>
+                    <div class="info-value" id="gpu-model">NVIDIA RTX</div>
+                </div>
+                <div class="info-section">
+                    <div class="info-label">USER</div>
+                    <div class="info-value" id="current-user">simon</div>
+                </div>
+                <div class="info-section">
+                    <div class="info-label">UPTIME</div>
+                    <div class="info-value" id="uptime-info">00:00:00</div>
+                </div>
+                <div class="info-section">
+                    <div class="info-label">SERVER UPTIME</div>
+                    <div class="info-value" id="server-uptime">00:00:00</div>
+                </div>
+                <div class="info-section">
+                    <div class="info-label">PROCESSES</div>
+                    <div class="info-value" id="process-count">127</div>
+                </div>
+                <div class="info-section">
+                    <div class="info-label">MEMORY</div>
+                    <div class="info-value" id="memory-usage">2.1GB / 8.0GB</div>
+                </div>
+                <div class="info-section">
+                    <div class="info-label">STORAGE</div>
+                    <div class="info-value" id="storage-usage">45GB / 500GB</div>
+                </div>
+                <div class="info-section">
+                    <div class="info-label">CPU USAGE</div>
+                    <div class="info-value" id="cpu-usage">15%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- File Explorer -->
+        <div id="file-explorer" class="file-explorer hidden">
+            <div class="panel-header">
+                <span class="panel-title">FILE_SYSTEM</span>
+            </div>
+            <div class="explorer-controls">
+                <input type="text" id="path-input" class="path-input" placeholder="Enter file path...">
+                <button id="view-toggle" class="view-toggle" title="Toggle between list and grid view">
+                    <img src="assets/fxtoggle.svg" alt="toggle" class="toggle-icon">
+                </button>
+            </div>
+            <div class="explorer-content" id="explorer-content">
+                <!-- File explorer content will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- File Viewer Popup -->
+        <div id="file-viewer-popup" class="file-viewer-popup hidden">
+            <div class="popup-header">
+                <span class="popup-title" id="popup-filename">File Viewer</span>
+                <button id="popup-close" class="popup-close">×</button>
+            </div>
+            <div class="popup-content">
+                <!-- Loading spinner -->
+                <div id="loading-content" class="loading-content">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">Loading file...</div>
+                </div>
+                <!-- Text mode content -->
+                <div id="text-content" class="text-content hidden">
+                    <pre id="text-display"></pre>
+                </div>
+                <!-- Binary mode content -->
+                <div id="binary-content" class="binary-content hidden">
+                    <div class="hex-viewer">
+                        <div class="hex-column">
+                            <div class="hex-header">HEX</div>
+                            <div class="hex-data" id="hex-data"></div>
+                        </div>
+                        <div class="ascii-column">
+                            <div class="ascii-header">ASCII</div>
+                            <div class="ascii-data" id="ascii-data"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-web-links@0.9.0/lib/xterm-addon-web-links.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
