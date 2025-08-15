@@ -544,8 +544,6 @@ class SciFiTerminal {
         if (message.type === 'system_info' && message.action === 'info') {
             console.log('Received system info:', message.data);
             this.updateSystemInfo(message.data);
-            // Play sound effect for info update
-            this.playSound('sfx/appear.wav');
         }
     }
 
