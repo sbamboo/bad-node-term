@@ -338,7 +338,6 @@ const formatPathForDisplay = (filePath) => {
 
 // System information collection functions
 const getSystemInfo = async () => {
-  try {
     const { exec } = await import('child_process');
     const execAsync = promisify(exec);
 
@@ -543,7 +542,7 @@ const getSystemInfo = async () => {
       cpuModel: cpuModel,
       cpuCores: cpuCores,
       cpuUsage: cpuUsagePercent,
-      gpuModel: gpuModel, // Will be "None detected" on Windows
+      gpuModel: gpuModel,
       memoryTotal: Math.round(totalMem / (1024 * 1024 * 1024)), // GB
       memoryUsed: Math.round(usedMem / (1024 * 1024 * 1024)),
       memoryUsage: memUsagePercent,
@@ -557,12 +556,6 @@ const getSystemInfo = async () => {
       networkRx: networkInfo.rx,
       networkTx: networkInfo.tx,
     };
-  } catch (error) {
-    console.error('Error collecting system info:', error);
-    return {
-      error: 'Failed to collect system information',
-    };
-  }
 };
 
 // Serve static files from public directory
