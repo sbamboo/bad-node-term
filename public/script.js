@@ -21,6 +21,13 @@ class SciFiTerminal {
 
         this.currentDirectoryContents = [];
 
+        // Media file extensions
+        this.mediaExtensions = {
+            image: ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'],
+            audio: ['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac'],
+            video: ['.mp4', '.webm', '.avi', '.mov', '.mkv', '.wmv', '.flv']
+        };
+
         this.initStartupSequence();
     }
 
@@ -641,7 +648,8 @@ class SciFiTerminal {
                 return {
                     name: fileItem.name,
                     size: fileItem.size * 1024, // Convert KB to bytes
-                    isBinary: fileItem.isBinary || false
+                    isBinary: fileItem.isBinary || false,
+                    isMedia: this.isMediaFile(fileItem.name)
                 };
             }
         }
@@ -652,7 +660,8 @@ class SciFiTerminal {
         return {
             name: filename,
             size: 0, // Will be updated when we get the response
-            isBinary: !textExtensions.includes('.' + ext)
+            isBinary: !textExtensions.includes('.' + ext),
+            isMedia: this.isMediaFile(filename)
         };
     }
 
@@ -715,6 +724,23 @@ class SciFiTerminal {
         return Math.max(pageSize, 256); // Minimum 256 bytes for text
     }
 
+    isMediaFile(filename) {
+        const ext = '.' + filename.split('.').pop().toLowerCase();
+        return Object.values(this.mediaExtensions).some(extensions => 
+            extensions.includes(ext)
+        );
+    }
+
+    getMediaType(filename) {
+        const ext = '.' + filename.split('.').pop().toLowerCase();
+        for (const [type, extensions] of Object.entries(this.mediaExtensions)) {
+            if (extensions.includes(ext)) {
+                return type;
+            }
+        }
+        return null;
+    }
+
     // New unified showFileViewer
     showFileViewer(filename, mode, size) {
         const popup = document.getElementById('file-viewer-popup');
@@ -722,9 +748,25 @@ class SciFiTerminal {
         const loadingContent = document.getElementById('loading-content');
         const textContent = document.getElementById('text-content');
         const binaryContent = document.getElementById('binary-content');
+        const playButton = document.getElementById('play-button');
 
         // Update filename and size
         filenameElement.textContent = `${filename} (${this.formatFileSize(size)})`;
+
+        // Check if this is a media file
+        const isMedia = this.isMediaFile(filename);
+        const mediaType = this.getMediaType(filename);
+
+        // Show/hide play button based on media type
+        if (playButton) {
+            if (isMedia && mode === 'binary') {
+                playButton.style.display = 'flex';
+                playButton.disabled = true; // Disable until all content is loaded
+                playButton.innerHTML = '<span>Loading media...</span>';
+            } else {
+                playButton.style.display = 'none';
+            }
+        }
 
         // Hide all content types initially
         loadingContent.classList.add('hidden');
@@ -744,6 +786,11 @@ class SciFiTerminal {
         } else if (mode === 'binary') {
             // Only show the container; content is filled by displayChunkedBinaryContent
             binaryContent.classList.remove('hidden');
+            
+            // If this is a media file and we have all content loaded, enable play button
+            if (isMedia && this.currentFileInfo && this.currentFileInfo.eof) {
+                this.enablePlayButton(filename, mediaType);
+            }
         }
 
         // Show popup
@@ -1017,6 +1064,12 @@ class SciFiTerminal {
             } else if (message.mode === 'binary') {
                 console.log('Displaying binary content');
                 this.displayChunkedBinaryContent(); // No message needed
+                
+                // Check if this is a media file and all content is loaded
+                if (this.isMediaFile(message.filename) && message.eof) {
+                    const mediaType = this.getMediaType(message.filename);
+                    this.enablePlayButton(message.filename, mediaType);
+                }
             }
         } catch (error) {
             console.error('Error in handleChunkedFileContent:', error);
@@ -1083,6 +1136,160 @@ class SciFiTerminal {
 
         // Pass the trim()med content to displayHexViewer
         this.displayHexViewer(fullHexContent.trim(), hexData, asciiData);
+    }
+
+    enablePlayButton(filename, mediaType) {
+        const playButton = document.getElementById('play-button');
+        if (playButton && this.isMediaFile(filename)) {
+            playButton.disabled = false;
+            playButton.innerHTML = '<span>▶ Play</span>';
+            
+            // Remove any existing event listeners
+            const newButton = playButton.cloneNode(true);
+            playButton.parentNode.replaceChild(newButton, playButton);
+            
+            // Add click handler
+            newButton.addEventListener('click', () => {
+                this.playMediaFile(filename, mediaType);
+            });
+        }
+    }
+
+    playMediaFile(filename, mediaType) {
+        try {
+            console.log('Playing media file:', filename, 'type:', mediaType);
+            
+            // Get all hex content from loaded pages
+            const sortedPages = Array.from(this.currentFileInfo.loadedPages.values())
+                .sort((a, b) => a.page - b.page);
+            
+            let fullHexContent = '';
+            sortedPages.forEach((page) => {
+                fullHexContent += page.text.replace(/\s/g, ''); // Remove spaces
+            });
+            
+            // Convert hex to binary
+            const binaryData = this.hexToUint8Array(fullHexContent);
+            
+            // Determine MIME type
+            const ext = '.' + filename.split('.').pop().toLowerCase();
+            const mimeTypes = {
+                '.jpg': 'image/jpeg',
+                '.jpeg': 'image/jpeg',
+                '.png': 'image/png',
+                '.gif': 'image/gif',
+                '.bmp': 'image/bmp',
+                '.webp': 'image/webp',
+                '.svg': 'image/svg+xml',
+                '.mp3': 'audio/mpeg',
+                '.wav': 'audio/wav',
+                '.ogg': 'audio/ogg',
+                '.m4a': 'audio/mp4',
+                '.aac': 'audio/aac',
+                '.flac': 'audio/flac',
+                '.mp4': 'video/mp4',
+                '.webm': 'video/webm',
+                '.avi': 'video/avi',
+                '.mov': 'video/quicktime',
+                '.mkv': 'video/x-matroska',
+                '.wmv': 'video/x-ms-wmv',
+                '.flv': 'video/x-flv'
+            };
+            
+            const mimeType = mimeTypes[ext] || 'application/octet-stream';
+            
+            // Create blob and object URL
+            const blob = new Blob([binaryData], { type: mimeType });
+            const objectUrl = URL.createObjectURL(blob);
+            
+            // Create and show media element
+            this.showMediaPlayer(filename, mediaType, objectUrl, mimeType);
+            
+        } catch (error) {
+            console.error('Error playing media file:', error);
+            alert('Error playing media file: ' + error.message);
+        }
+    }
+
+    hexToUint8Array(hexString) {
+        // Remove any whitespace and ensure even length
+        const cleanHex = hexString.replace(/\s/g, '');
+        if (cleanHex.length % 2 !== 0) {
+            throw new Error('Invalid hex string length');
+        }
+        
+        const bytes = new Uint8Array(cleanHex.length / 2);
+        for (let i = 0; i < cleanHex.length; i += 2) {
+            bytes[i / 2] = parseInt(cleanHex.substr(i, 2), 16);
+        }
+        return bytes;
+    }
+
+    showMediaPlayer(filename, mediaType, objectUrl, mimeType) {
+        // Create media player overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'media-player-overlay';
+        overlay.innerHTML = `
+            <div class="media-player-container">
+                <div class="media-player-header">
+                    <span class="media-player-title">${filename}</span>
+                    <button class="media-player-close">×</button>
+                </div>
+                <div class="media-player-content">
+                    ${this.createMediaElement(mediaType, objectUrl, mimeType)}
+                </div>
+            </div>
+        `;
+        
+        // Add to document
+        document.body.appendChild(overlay);
+        
+        // Add event listeners
+        const closeButton = overlay.querySelector('.media-player-close');
+        closeButton.addEventListener('click', () => {
+            URL.revokeObjectURL(objectUrl);
+            overlay.remove();
+        });
+        
+        // Close on overlay click (but not on media element)
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                URL.revokeObjectURL(objectUrl);
+                overlay.remove();
+            }
+        });
+        
+        // Close on escape key
+        const escapeHandler = (e) => {
+            if (e.key === 'Escape') {
+                URL.revokeObjectURL(objectUrl);
+                overlay.remove();
+                document.removeEventListener('keydown', escapeHandler);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+        
+        // Play sound effect
+        this.playSound('sfx/appear.wav');
+    }
+
+    createMediaElement(mediaType, objectUrl, mimeType) {
+        switch (mediaType) {
+            case 'image':
+                return `<img src="${objectUrl}" alt="Media content" class="media-image">`;
+            case 'audio':
+                return `<audio controls class="media-audio" preload="metadata">
+                    <source src="${objectUrl}" type="${mimeType}">
+                    Your browser does not support the audio element.
+                </audio>`;
+            case 'video':
+                return `<video controls class="media-video" preload="metadata">
+                    <source src="${objectUrl}" type="${mimeType}">
+                    Your browser does not support the video element.
+                </video>`;
+            default:
+                return `<p>Unsupported media type: ${mediaType}</p>`;
+        }
     }
 
     requestFileChunk(byteOffset, asPage) {
