@@ -1,6 +1,7 @@
 import express from 'express';
 import { WebSocketServer } from 'ws';
 import { spawn } from 'node-pty';
+import { spawn as cpSpawn } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import http from 'http';
@@ -20,13 +21,13 @@ const platform = os.platform();
 let fileServerCurrDir = process.cwd();
 
 function commandExists(cmd) {
-  if (process.env.WEB_CONTAINER || !fs.existsSync('/proc')) {
+  if (process.env.WEB_CONTAINER) {
     return false;
   }
   return new Promise((resolve) => {
     // Use 'where' on Windows, 'which' elsewhere
-    const checker = process.platform === 'win32' ? 'where' : 'which';
-    const ps = spawn(checker, [cmd]);
+    const checker = process.platform === 'win32' ? 'where.exe' : 'which';
+    const ps = cpSpawn(checker, [cmd]);
 
     ps.on('error', () => resolve(false));
     ps.on('close', (code) => resolve(code === 0));
@@ -577,7 +578,9 @@ wss.on('connection', (ws) => {
 
   var shell;
   if (platform === 'win32') {
-    if (commandExists(["powershell"])) {
+    if (commandExists(["pwsh"])) {
+      shell = 'pwsh.exe';
+    } else if (commandExists(["powershell"])) {
       shell = 'powershell.exe';
     } else {
       shell = 'cmd.exe'

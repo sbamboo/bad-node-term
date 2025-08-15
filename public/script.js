@@ -7,6 +7,7 @@ class SciFiTerminal {
         this.hasPlayedFirstPrompt = false;
         this.startTime = Date.now();
         this.isGridView = false;
+        this.currentlyPlaying = {}; // Track currently playing audio files
 
         // Initialize file viewer state
         this.currentFileInfo = {
@@ -41,6 +42,60 @@ class SciFiTerminal {
             });
         } catch (error) {
             // Silently fail if audio file doesn't exist
+        }
+    }
+
+    playSoundNonOverlap(path) {
+        // Check if this sound is already playing
+        const currentAudio = this.currentlyPlaying[path];
+
+        if (currentAudio && !currentAudio.paused) {
+            // Already playing, do nothing
+            return;
+        }
+
+        try {
+            const audio = new Audio(path);
+            audio.volume = 0.3;
+            audio.play().catch(() => {
+                // Silently fail
+            });
+
+            // Store reference in currentlyPlaying
+            this.currentlyPlaying[path] = audio;
+
+            // Clean up reference when sound ends
+            audio.addEventListener('ended', () => {
+                delete this.currentlyPlaying[path];
+            });
+
+        } catch (error) {
+            // Silently fail
+        }
+    }
+
+    playSoundRestart(path) {
+        try {
+            let audio = this.currentlyPlaying[path];
+
+            if (!audio) {
+                // If no Audio object exists yet, create one
+                audio = new Audio(path);
+                audio.volume = 0.3;
+
+                // Store it for future reference
+                this.currentlyPlaying[path] = audio;
+            }
+
+            // Restart from the beginning
+            audio.currentTime = 0;
+
+            audio.play().catch(() => {
+                // Silently fail if can't play
+            });
+
+        } catch (error) {
+            // Silently fail
         }
     }
 
@@ -148,7 +203,7 @@ class SciFiTerminal {
             infoValues.forEach((value, index) => {
                 setTimeout(() => {
                     value.classList.add('text-appear');
-                    this.playSound('sfx/appear.wav');
+                    this.playSoundRestart('sfx/appear.wav');
                 }, index * 100);
             });
         }, 800);
@@ -275,7 +330,7 @@ class SciFiTerminal {
                     (event.data.includes('$') || event.data.includes('>'))
                 ) {
                     this.hasPlayedFirstPrompt = true;
-                    this.playSound('sfx/appear.wav');
+                    this.playSoundRestart('sfx/appear.wav');
                 }
             }
         };
@@ -488,7 +543,7 @@ class SciFiTerminal {
                 })
             );
             // Play sound effect for initial load
-            this.playSound('sfx/appear.wav');
+            this.playSoundRestart('sfx/appear.wav');
         }
     }
 
@@ -512,7 +567,7 @@ class SciFiTerminal {
             // Update the path input field with current directory
             this.updatePathInput(message.path);
             // Play sound effect for directory change
-            this.playSound('sfx/appear.wav');
+            this.playSound('sfx/panels.wav');
         } else if (
             message.type === 'file_system' &&
             message.action === 'file_content'
@@ -798,7 +853,7 @@ class SciFiTerminal {
 
         // Play sound effect (only once when popup appears)
         if (mode === 'loading') {
-            this.playSound('sfx/appear.wav');
+            this.playSoundRestart('sfx/appear.wav');
         }
     }
 
@@ -830,7 +885,7 @@ class SciFiTerminal {
         }
 
         popup.classList.remove('hidden');
-        this.playSound('sfx/appear.wav');
+        this.playSoundRestart('sfx/appear.wav');
     }
 
     displayHexViewer(hexContent, hexElement, asciiElement) {
@@ -1270,7 +1325,7 @@ class SciFiTerminal {
         document.addEventListener('keydown', escapeHandler);
         
         // Play sound effect
-        this.playSound('sfx/appear.wav');
+        this.playSoundRestart('sfx/appear.wav');
     }
 
     createMediaElement(mediaType, objectUrl, mimeType) {
@@ -1338,7 +1393,7 @@ class SciFiTerminal {
             };
 
             // Play sound effect
-            this.playSound('sfx/appear.wav');
+            this.playSoundRestart('sfx/appear.wav');
         }
     }
 
@@ -1372,7 +1427,7 @@ class SciFiTerminal {
             parentItem.addEventListener('click', () => this.changeDirectory('..'));
             parentItem.classList.add('text-appear');
             explorerContent.appendChild(parentItem);
-            this.playSound('sfx/appear.wav');
+            this.playSound('sfx/panels.wav');
         }
 
         // Add file and folder items
@@ -1386,18 +1441,17 @@ class SciFiTerminal {
                     item.type === 'folder'
                         ? 'assets/fxfolder.svg'
                         : 'assets/fxfile.svg';
-                console.log(`Creating ${item.type} item with icon: ${iconSrc}`);
 
                 // Create different HTML for list vs grid view
                 if (this.isGridView) {
                     itemElement.innerHTML = `
-                        <img src="${iconSrc}" alt="${item.type}" class="${item.type === 'folder' ? 'folder-icon' : 'file-icon'}" onerror="this.style.display='none'" onload="console.log('Icon loaded:', this.src)">
+                        <img src="${iconSrc}" alt="${item.type}" class="${item.type === 'folder' ? 'folder-icon' : 'file-icon'}" onerror="this.style.display='none'">
                         <span class="file-name">${item.name}</span>
                         ${item.type === 'file' ? `<span class="file-info">${item.size}KB</span>` : ''}
                     `;
                 } else {
                     itemElement.innerHTML = `
-                        <img src="${iconSrc}" alt="${item.type}" class="${item.type === 'folder' ? 'folder-icon' : 'file-icon'}" onerror="this.style.display='none'" onload="console.log('Icon loaded:', this.src)">
+                        <img src="${iconSrc}" alt="${item.type}" class="${item.type === 'folder' ? 'folder-icon' : 'file-icon'}" onerror="this.style.display='none'">
                         <span class="file-name">${item.name}</span>
                         <span class="file-info">${item.type === 'folder' ? '' : `${item.size}KB`}</span>
                     `;
@@ -1417,7 +1471,7 @@ class SciFiTerminal {
 
                 itemElement.classList.add('text-appear');
                 explorerContent.appendChild(itemElement);
-                this.playSound('sfx/appear.wav');
+                this.playSoundRestart('sfx/panels.wav');
             }, index * 150);
         });
     }
@@ -1450,6 +1504,10 @@ class SciFiTerminal {
             }
         });
 
+        pathInput.addEventListener('keydown', (_) => {
+            this.playSound('sfx/stdin.wav');
+        });
+
         // View toggle handler
         viewToggle.addEventListener('click', () => {
             this.toggleView();
@@ -1480,7 +1538,7 @@ class SciFiTerminal {
         }
 
         // Play sound effect
-        this.playSound('sfx/appear.wav');
+        this.playSoundRestart('sfx/appear.wav');
 
         // Re-render current content with new view
         this.refreshCurrentView();
