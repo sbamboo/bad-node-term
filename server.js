@@ -351,12 +351,20 @@ const getSystemInfo = async () => {
 
     try {
       if (platform === 'linux') {
-        const { stdout: osRelease } = await execAsync('cat /etc/os-release');
-        const prettyNameMatch = osRelease.match(/PRETTY_NAME="([^"]+)"/);
-        osVersion = prettyNameMatch ? prettyNameMatch[1] : 'Linux Distribution Unknown';
+        if (commandExists("cat")) {
+          const { stdout: osRelease } = await execAsync('cat /etc/os-release');
+          const prettyNameMatch = osRelease.match(/PRETTY_NAME="([^"]+)"/);
+          osVersion = prettyNameMatch ? prettyNameMatch[1] : 'Linux Distribution Unknown';
+        } else {
+          osVersion = 'Linux Distribution Unknown';
+        }
       } else if (platform === 'darwin') {
-        const { stdout: productVersion } = await execAsync('sw_vers -productVersion');
-        osVersion = `macOS ${productVersion.trim()}`;
+        if (commandExists("sw_vers")) {
+          const { stdout: productVersion } = await execAsync('sw_vers -productVersion');
+          osVersion = `macOS ${productVersion.trim()}`;
+        } else {
+          osVersion = 'macOS';
+        }
       } else if (platform === 'win32') {
         // Use 'ver' for simple Windows OS version, or 'systeminfo' for more details.
         // Opting for 'systeminfo' as it provides a better 'OS Name'.
