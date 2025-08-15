@@ -20,7 +20,8 @@ const platform = os.platform();
 let fileServerCurrDir = process.cwd();
 
 function commandExists(cmd) {
-  /*if (process.env.WEB_CONTAINER || !fs.existsSync('/proc')) {
+  /*
+  if (process.env.WEB_CONTAINER || !fs.existsSync('/proc')) {
     return false;
   }
   */
