@@ -296,7 +296,7 @@ class SciFiTerminal {
             if (this.isConnected && this.websocket.readyState === WebSocket.OPEN) {
                 this.websocket.send(data);
                 // Play key sound for each keystroke
-                this.playSound('sfx/key.wav');
+                this.playSound('sfx/stdin.wav');
             }
         });
 
