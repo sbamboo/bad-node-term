@@ -338,6 +338,7 @@ const formatPathForDisplay = (filePath) => {
 
 // System information collection functions
 const getSystemInfo = async () => {
+  try {
     const { exec } = await import('child_process');
     const execAsync = promisify(exec);
 
@@ -556,6 +557,11 @@ const getSystemInfo = async () => {
       networkRx: networkInfo.rx,
       networkTx: networkInfo.tx,
     };
+  } catch (error) {
+    return {
+      error: 'Failed to collect system information',
+    };
+  }
 };
 
 // Serve static files from public directory
