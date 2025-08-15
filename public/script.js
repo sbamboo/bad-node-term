@@ -41,7 +41,7 @@ class SciFiTerminal {
     initStartupSequence() {
         const enterBtn = document.getElementById('enter-btn');
         enterBtn.addEventListener('click', () => {
-            this.playSound('sfx/launch.mp3');
+            this.playSound('sfx/launch.wav');
             this.startAnimationSequence();
         });
     }
@@ -59,7 +59,7 @@ class SciFiTerminal {
         document.body.appendChild(dot);
 
         await this.sleep(500);
-        this.playSound('sfx/uianim.mp3');
+        this.playSound('sfx/uianim.wav');
 
         // Animate dot to line
         dot.style.transition = 'all 1s ease';
@@ -68,7 +68,7 @@ class SciFiTerminal {
         dot.style.borderRadius = '0';
 
         await this.sleep(1000);
-        this.playSound('sfx/uianim.mp3');
+        this.playSound('sfx/uianim.wav');
 
         // Animate line to square
         dot.style.width = '400px';
@@ -78,7 +78,7 @@ class SciFiTerminal {
         dot.style.borderRadius = '8px';
 
         await this.sleep(1000);
-        this.playSound('sfx/uianim.mp3');
+        this.playSound('sfx/uianim.wav');
 
         // Calculate terminal position and dimensions
         const terminalContainer =
@@ -95,7 +95,7 @@ class SciFiTerminal {
         // The square will scale UP from 400x300 to terminal dimensions
 
         await this.sleep(1500);
-        this.playSound('sfx/uianim.mp3');
+        this.playSound('sfx/uianim.wav');
 
         // Remove animation element and show main interface
         dot.remove();
@@ -141,7 +141,7 @@ class SciFiTerminal {
             infoValues.forEach((value, index) => {
                 setTimeout(() => {
                     value.classList.add('text-appear');
-                    this.playSound('sfx/appear.mp3');
+                    this.playSound('sfx/appear.wav');
                 }, index * 100);
             });
         }, 800);
@@ -268,7 +268,7 @@ class SciFiTerminal {
                     (event.data.includes('$') || event.data.includes('>'))
                 ) {
                     this.hasPlayedFirstPrompt = true;
-                    this.playSound('sfx/appear.mp3');
+                    this.playSound('sfx/appear.wav');
                 }
             }
         };
@@ -296,7 +296,7 @@ class SciFiTerminal {
             if (this.isConnected && this.websocket.readyState === WebSocket.OPEN) {
                 this.websocket.send(data);
                 // Play key sound for each keystroke
-                this.playSound('sfx/key.mp3');
+                this.playSound('sfx/key.wav');
             }
         });
 
@@ -481,7 +481,7 @@ class SciFiTerminal {
                 })
             );
             // Play sound effect for initial load
-            this.playSound('sfx/appear.mp3');
+            this.playSound('sfx/appear.wav');
         }
     }
 
@@ -505,7 +505,7 @@ class SciFiTerminal {
             // Update the path input field with current directory
             this.updatePathInput(message.path);
             // Play sound effect for directory change
-            this.playSound('sfx/appear.mp3');
+            this.playSound('sfx/appear.wav');
         } else if (
             message.type === 'file_system' &&
             message.action === 'file_content'
@@ -545,7 +545,7 @@ class SciFiTerminal {
             console.log('Received system info:', message.data);
             this.updateSystemInfo(message.data);
             // Play sound effect for info update
-            this.playSound('sfx/appear.mp3');
+            this.playSound('sfx/appear.wav');
         }
     }
 
@@ -753,7 +753,7 @@ class SciFiTerminal {
 
         // Play sound effect (only once when popup appears)
         if (mode === 'loading') {
-            this.playSound('sfx/appear.mp3');
+            this.playSound('sfx/appear.wav');
         }
     }
 
@@ -785,7 +785,7 @@ class SciFiTerminal {
         }
 
         popup.classList.remove('hidden');
-        this.playSound('sfx/appear.mp3');
+        this.playSound('sfx/appear.wav');
     }
 
     displayHexViewer(hexContent, hexElement, asciiElement) {
@@ -1133,7 +1133,7 @@ class SciFiTerminal {
             };
 
             // Play sound effect
-            this.playSound('sfx/appear.mp3');
+            this.playSound('sfx/appear.wav');
         }
     }
 
@@ -1167,7 +1167,7 @@ class SciFiTerminal {
             parentItem.addEventListener('click', () => this.changeDirectory('..'));
             parentItem.classList.add('text-appear');
             explorerContent.appendChild(parentItem);
-            this.playSound('sfx/appear.mp3');
+            this.playSound('sfx/appear.wav');
         }
 
         // Add file and folder items
@@ -1212,7 +1212,7 @@ class SciFiTerminal {
 
                 itemElement.classList.add('text-appear');
                 explorerContent.appendChild(itemElement);
-                this.playSound('sfx/appear.mp3');
+                this.playSound('sfx/appear.wav');
             }, index * 150);
         });
     }
@@ -1275,7 +1275,7 @@ class SciFiTerminal {
         }
 
         // Play sound effect
-        this.playSound('sfx/appear.mp3');
+        this.playSound('sfx/appear.wav');
 
         // Re-render current content with new view
         this.refreshCurrentView();
